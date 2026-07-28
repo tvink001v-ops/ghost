@@ -80,6 +80,7 @@
             flex-shrink: 0;
         }
         .user-badge i { color: #238636; font-size: 0.9rem; }
+        .user-badge:active { background: #1c2128; }
         .status-dot {
             display: inline-block;
             width: 8px;
@@ -362,7 +363,7 @@
             color: #238636;
         }
 
-        /* ===== ЧАТ ===== */
+        /* ЧАТ */
         .chat-overlay {
             position: fixed;
             top: 0;
@@ -413,6 +414,7 @@
         .chat-header-info span {
             font-weight: 600;
             color: #f0f6fc;
+            font-size: 0.95rem;
         }
         .chat-close {
             background: none;
@@ -665,16 +667,6 @@
             .btn-action.chat:hover { background: #1f6feb; }
             .btn-action.done:hover { background: #da3633; }
         }
-
-        .notification-badge {
-            background: #da3633;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 8px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            margin-left: 4px;
-        }
     </style>
 </head>
 <body>
@@ -775,11 +767,7 @@
         let currentUser = '';
         let tasks = [];
         let chatTaskId = null;
-        let chatAuthor = '';
-        let chatTaskTitle = '';
         let chatMessages = [];
-        let notificationCount = 0;
-        let lastTaskCount = 0;
 
         // Элементы
         const registerOverlay = document.getElementById('registerOverlay');
@@ -796,7 +784,6 @@
         const chatTitle = document.getElementById('chatTitle');
         const chatClose = document.getElementById('chatClose');
 
-        // Toast
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -840,16 +827,53 @@
         });
         if (!savedName) setTimeout(() => nameInput.focus(), 300);
 
+        // ===== СОЗДАНИЕ ТАБЛИЦЫ ЧАТА =====
+        async function ensureChatTable() {
+            if (!isConfigured) return;
+            try {
+                // Проверяем существование таблицы
+                const { error } = await supabase
+                    .from('chat_messages')
+                    .select('id')
+                    .limit(1);
+                
+                if (error && error.code === '42P01') {
+                    // Таблица не существует — создаём через SQL
+                    showToast('📦 Создаём таблицу чата...');
+                    const { error: createError } = await supabase.rpc('exec_sql', {
+                        sql: `
+                            CREATE TABLE IF NOT EXISTS chat_messages (
+                                id BIGSERIAL PRIMARY KEY,
+                                task_id BIGINT NOT NULL,
+                                author TEXT NOT NULL,
+                                message TEXT NOT NULL,
+                                created_at TIMESTAMPTZ DEFAULT NOW()
+                            );
+                            ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+                            DROP POLICY IF EXISTS "Всё разрешено" ON chat_messages;
+                            CREATE POLICY "Всё разрешено" ON chat_messages FOR ALL USING (true) WITH CHECK (true);
+                        `
+                    });
+                    
+                    if (createError) {
+                        console.warn('⚠️ Не удалось создать таблицу чата:', createError);
+                        showToast('⚠️ Создайте таблицу чата вручную в Supabase', true);
+                    } else {
+                        showToast('✅ Таблица чата создана!');
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Ошибка проверки таблицы чата:', e);
+            }
+        }
+
         // ===== ЧАТ =====
-        function openChat(taskId, author, title) {
+        function openChat(taskId, title) {
             chatTaskId = taskId;
-            chatAuthor = author;
-            chatTaskTitle = title;
             chatTitle.textContent = `💬 ${title}`;
             chatMessages = [];
-            chatMessagesEl.innerHTML = '';
+            chatMessagesEl.innerHTML = '<div style="text-align:center;color:#8b949e;padding:20px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div>';
             chatOverlay.classList.add('open');
-            // Загружаем сообщения чата
             loadChatMessages(taskId);
             setTimeout(() => chatInput.focus(), 300);
         }
@@ -866,11 +890,10 @@
 
         async function loadChatMessages(taskId) {
             if (!isConfigured) {
-                // Локальный режим — просто показываем заглушку
                 chatMessagesEl.innerHTML = `
                     <div style="text-align:center;color:#8b949e;padding:20px;font-size:0.9rem;">
                         <i class="fas fa-wifi" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>
-                        Офлайн-режим. Чат будет доступен при подключении к интернету.
+                        Офлайн-режим
                     </div>
                 `;
                 return;
@@ -883,7 +906,24 @@
                     .eq('task_id', taskId)
                     .order('created_at', { ascending: true });
 
-                if (error) throw error;
+                if (error) {
+                    if (error.code === '42P01') {
+                        chatMessagesEl.innerHTML = `
+                            <div style="text-align:center;color:#8b949e;padding:20px;font-size:0.9rem;">
+                                <i class="fas fa-database" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>
+                                Таблица чата создаётся...<br>
+                                <span style="font-size:0.8rem;opacity:0.7;">Попробуйте обновить страницу через минуту</span>
+                            </div>
+                        `;
+                        // Пытаемся создать таблицу
+                        await ensureChatTable();
+                        // Повторяем загрузку через 2 секунды
+                        setTimeout(() => loadChatMessages(taskId), 2000);
+                        return;
+                    }
+                    throw error;
+                }
+                
                 chatMessages = data || [];
                 renderChatMessages();
             } catch (e) {
@@ -891,7 +931,8 @@
                 chatMessagesEl.innerHTML = `
                     <div style="text-align:center;color:#8b949e;padding:20px;font-size:0.9rem;">
                         <i class="fas fa-exclamation-triangle" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>
-                        Ошибка загрузки чата
+                        Ошибка загрузки<br>
+                        <span style="font-size:0.8rem;opacity:0.7;">${e.message || 'Попробуйте позже'}</span>
                     </div>
                 `;
             }
@@ -926,7 +967,7 @@
             const text = chatInput.value.trim();
             if (!text || !chatTaskId) return;
             if (!isConfigured) {
-                showToast('❌ Нет подключения к облаку', true);
+                showToast('❌ Нет подключения', true);
                 return;
             }
 
@@ -943,12 +984,22 @@
                     }])
                     .select();
 
-                if (error) throw error;
+                if (error) {
+                    if (error.code === '42P01') {
+                        showToast('📦 Создаём таблицу чата...');
+                        await ensureChatTable();
+                        // Повторяем отправку
+                        chatInput.value = text;
+                        chatSendBtn.disabled = false;
+                        setTimeout(() => sendChatMessage(), 1000);
+                        return;
+                    }
+                    throw error;
+                }
 
                 if (data && data.length > 0) {
                     chatMessages.push(data[0]);
                     renderChatMessages();
-                    showToast('✅ Сообщение отправлено');
                 }
             } catch (e) {
                 console.error('Ошибка отправки:', e);
@@ -974,6 +1025,11 @@
             return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
         }
 
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
         // ===== ОСНОВНЫЕ ФУНКЦИИ =====
 
         function initApp() {
@@ -981,6 +1037,10 @@
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 isConfigured = true;
                 document.getElementById('statusDot').className = 'status-dot online';
+                
+                // Создаём таблицу чата при запуске
+                ensureChatTable();
+                
                 loadTasks();
                 // Автообновление каждые 3 секунды
                 setInterval(() => {
@@ -1016,27 +1076,6 @@
                     document.activeElement?.blur();
                 }
             }, { passive: true });
-
-            // Подписка на новые сообщения в чате
-            if (isConfigured) {
-                supabase
-                    .channel('chat_updates')
-                    .on('postgres_changes', {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'chat_messages',
-                        filter: `task_id=eq.${chatTaskId || 0}`
-                    }, (payload) => {
-                        if (chatTaskId && payload.new.task_id === chatTaskId) {
-                            chatMessages.push(payload.new);
-                            renderChatMessages();
-                            if (payload.new.author !== currentUser) {
-                                showToast(`💬 Новое сообщение от ${payload.new.author}`);
-                            }
-                        }
-                    })
-                    .subscribe();
-            }
         }
 
         const STORAGE_KEY = 'mobile_board_tasks_cloud';
@@ -1163,6 +1202,7 @@
                 if (task) {
                     Object.assign(task, updates);
                     renderTasks();
+                    showToast('✅ Задание обновлено');
                 }
             } catch (e) {
                 console.error('Ошибка обновления:', e);
@@ -1229,7 +1269,7 @@
                         </div>
                         <div class="task-actions">
                             ${!task.taken && !isAuthor ? `<button class="btn-action take" data-id="${task.id}"><i class="fas fa-hand-holding-heart"></i> Взять</button>` : ''}
-                            ${task.taken ? `<button class="btn-action chat" data-id="${task.id}" data-author="${escapeHtml(task.author)}" data-title="${escapeHtml(task.title)}"><i class="fas fa-comment"></i> Чат</button>` : ''}
+                            ${task.taken ? `<button class="btn-action chat" data-id="${task.id}" data-title="${escapeHtml(task.title)}"><i class="fas fa-comment"></i> Чат</button>` : ''}
                             ${isAuthor && !task.taken ? `<button class="btn-action done" data-id="${task.id}"><i class="fas fa-check"></i> Выполнено</button>` : ''}
                             ${isAuthor ? `<button class="btn-action delete" data-id="${task.id}"><i class="fas fa-trash-alt"></i></button>` : ''}
                         </div>
@@ -1254,9 +1294,8 @@
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const id = this.getAttribute('data-id');
-                    const author = this.getAttribute('data-author');
                     const title = this.getAttribute('data-title');
-                    openChat(id, author, title);
+                    openChat(id, title);
                     if (navigator.vibrate) navigator.vibrate(10);
                 });
             });
@@ -1282,11 +1321,6 @@
                     }
                 });
             });
-        }
-
-        function escapeHtml(unsafe) {
-            if (!unsafe) return '';
-            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
         async function addTask() {
@@ -1319,38 +1353,6 @@
                 tasksContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
-
-        // Создаём таблицу чата, если её нет
-        async function ensureChatTable() {
-            if (!isConfigured) return;
-            try {
-                const { error } = await supabase
-                    .from('chat_messages')
-                    .select('id')
-                    .limit(1);
-                if (error && error.code === '42P01') {
-                    // Таблицы нет — создаём
-                    await supabase.rpc('exec_sql', {
-                        sql: `
-                            CREATE TABLE IF NOT EXISTS chat_messages (
-                                id BIGSERIAL PRIMARY KEY,
-                                task_id BIGINT NOT NULL,
-                                author TEXT NOT NULL,
-                                message TEXT NOT NULL,
-                                created_at TIMESTAMPTZ DEFAULT NOW()
-                            );
-                            ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
-                            CREATE POLICY "Всё разрешено" ON chat_messages FOR ALL USING (true) WITH CHECK (true);
-                        `
-                    });
-                }
-            } catch (e) {
-                console.warn('⚠️ Ошибка создания таблицы чата:', e);
-            }
-        }
-
-        // Запускаем создание таблицы чата
-        setTimeout(ensureChatTable, 1000);
     })();
 </script>
 </body>
