@@ -782,6 +782,7 @@
         let chatMessages = [];
         let chatChannel = null;
         let chatAutoUpdateInterval = null;
+        let isClosingChat = false;
 
         // Элементы
         const registerOverlay = document.getElementById('registerOverlay');
@@ -979,6 +980,7 @@
             chatMessages = [];
             chatMessagesEl.innerHTML = '<div style="text-align:center;color:#8b949e;padding:20px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div>';
             chatOverlay.classList.add('open');
+            isClosingChat = false;
             
             subscribeToChat(taskId);
             loadChatMessages(taskId);
@@ -988,6 +990,9 @@
         }
 
         function closeChat() {
+            if (isClosingChat) return;
+            isClosingChat = true;
+            
             if (chatChannel) {
                 supabase.removeChannel(chatChannel);
                 chatChannel = null;
@@ -996,10 +1001,15 @@
             chatOverlay.classList.remove('open');
             chatTaskId = null;
             chatMessages = [];
+            
+            setTimeout(() => {
+                isClosingChat = false;
+            }, 300);
         }
 
         chatClose.addEventListener('click', function(e) {
             e.stopPropagation();
+            e.preventDefault();
             closeChat();
         });
 
@@ -1012,6 +1022,21 @@
 
         // Блокируем всплытие кликов внутри чата
         chatBox.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // ЗАПРЕЩАЕМ ЗАКРЫТИЕ ПРИ КЛИКЕ НА ПОЛЕ ВВОДА И КНОПКУ
+        chatInput.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        chatSendBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+        });
+
+        chatInput.addEventListener('focus', function(e) {
+            // Не даём закрыть чат при фокусе на поле
             e.stopPropagation();
         });
 
@@ -1124,6 +1149,10 @@
                 if (data && data.length > 0) {
                     chatMessages.push(data[0]);
                     renderChatMessages();
+                    // Прокручиваем вниз
+                    setTimeout(() => {
+                        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+                    }, 50);
                 }
             } catch (e) {
                 console.error('Ошибка отправки:', e);
@@ -1135,17 +1164,26 @@
             }
         }
 
+        // Отправка по клику на кнопку
         chatSendBtn.addEventListener('click', function(e) {
             e.stopPropagation();
+            e.preventDefault();
             sendChatMessage();
         });
 
+        // Отправка по Enter
         chatInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 e.stopPropagation();
                 sendChatMessage();
             }
+        });
+
+        // ЗАПРЕЩАЕМ ЗАКРЫТИЕ ПРИ ПОТЕРЕ ФОКУСА (выход из клавиатуры)
+        chatInput.addEventListener('blur', function(e) {
+            // Не закрываем чат при потере фокуса
+            e.stopPropagation();
         });
 
         function formatTime(date) {
