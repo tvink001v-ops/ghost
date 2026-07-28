@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Ghost — Анонимные задания</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        :root {
+            --bg-primary: #0b0e14;
+            --bg-secondary: #141b24;
+            --bg-card: #181f2b;
+            --bg-input: #0b1119;
+            --border-color: #29323e;
+            --text-primary: #e8edf5;
+            --text-secondary: #a4b5ce;
+            --text-muted: #7b8aa3;
+            --accent: #3a6090;
+            --accent-hover: #4a7aaa;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            --danger: #c94a4a;
+            --success: #4aaf7a;
+            --warning: #f0a030;
+            --purple: #7c5cbf;
+            --pink: #c95a8a;
+            --orange: #e07a3a;
+            --cyan: #3ab0b0;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 80px;
+        }
+
+        .app-container {
+            max-width: 500px;
+            width: 100%;
+            padding: 0 16px 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 0 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: var(--bg-secondary);
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logo:hover {
+            transform: rotate(5deg);
+            border-color: var(--accent);
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            background: linear-gradient(135deg, #d6e2f5, #8aa1c9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .header .trust-badge {
+            margin-left: auto;
+            background: rgba(74, 175, 122, 0.15);
+            border: 1px solid var(--success);
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.6rem;
+            color: var(--success);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .feed {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .task-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .task-card:active {
+            transform: scale(0.98);
+            border-color: var(--accent);
+        }
+
+        .task-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 14px;
+            background: var(--bg-secondary);
+            margin-bottom: 12px;
+        }
+
+        .task-card h3 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .task-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .task-card .task-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+
+        .task-card .task-meta span {
+            background: var(--bg-input);
+            padding: 2px 10px;
+            border-radius: 40px;
+        }
+
+        .task-card .category-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 28px 28px 0 0;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px 20px 30px;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content .close-btn {
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            padding: 0 10px;
+            border-radius: 40px;
+            cursor: pointer;
+            float: right;
+            margin-top: -8px;
+            line-height: 1.4;
+            transition: all 0.2s;
+        }
+
+        .modal-content .close-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .modal-content img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 16px;
+            background: var(--bg-input);
+            margin: 8px 0 16px;
+        }
+
+        .modal-content .main-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .modal-content .detail-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+            white-space: pre-wrap;
+        }
+
+        .modal-content .respond-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 60px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .modal-content .respond-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+
+        .modal-content .delete-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid rgba(200, 70, 70, 0.3);
+            border-radius: 60px;
+            color: #c94a4a;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .modal-content .delete-btn:hover {
+            background: rgba(200, 70, 70, 0.1);
+            border-color: #c94a4a;
+        }
+
+        .account-tab {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            padding-top: 8px;
+        }
+
+        .account-tab.active {
+            display: flex;
+        }
+
+        .account-tab h2 {
+            font-weight: 400;
+            font-size: 1.6rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .create-form {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group label .required {
+            color: #c94a4a;
+            margin-left: 4px;
+        }
+
+        .form-group label .optional {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-left: 4px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-group textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .form-group input[type="file"] {
+            padding: 10px 0;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+        }
+
+        .form-group input[type="file"]::file-selector-button {
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            margin-right: 16px;
+            transition: all 0.2s;
+        }
+
+        .form-group input[type="file"]::file-selector-button:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .form-group select option {
+            background: var(--bg-secondary);
+        }
+
+        .btn-publish {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 60px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-publish:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0 14px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            z-index: 500;
+            backdrop-filter: blur(8px);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            cursor: pointer;
+            padding: 4px 16px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 1.8rem;
+            line-height: 1;
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+        }
+
+        .nav-item .badge {
+            position: absolute;
+            top: -4px;
+            right: 4px;
+            background: var(--accent);
+            color: white;
+            border-radius: 40px;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px 0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            padding: 12px 24px;
+            border-radius: 40px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: var(--shadow);
+            max-width: 90%;
+            text-align: center;
+        }
+
+        /* Цвета для категорий */
+        .cat-study { border-left: 4px solid var(--accent); }
+        .cat-help { border-left: 4px solid var(--success); }
+        .cat-event { border-left: 4px solid var(--warning); }
+        .cat-secret { border-left: 4px solid var(--purple); }
+        .cat-shop { border-left: 4px solid var(--pink); }
+        .cat-sport { border-left: 4px solid var(--orange); }
+        .cat-tech { border-left: 4px solid var(--cyan); }
+        .cat-other { border-left: 4px solid var(--text-muted); }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.5rem; }
+            .modal-content { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">
+                <img src="https://github.com/tvink001v-ops/ghost/blob/main/%D0%91%D0%B5%D0%B7%20%D0%BD%D0%B0%D0%B7%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F28_20260729001722.png?raw=true" alt="Ghost Logo" />
+            </div>
+            <h1>GHOST</h1>
+            <div class="trust-badge">🔒 ДОВЕРЕННЫЙ</div>
+        </header>
+
+        <div id="feedContainer" class="feed">
+            <div class="empty-state">Нет заданий. Создайте первое!</div>
+        </div>
+
+        <div id="accountTab" class="account-tab">
+            <h2>Создать задание</h2>
+            <form id="createTaskForm" class="create-form">
+                <div class="form-group">
+                    <label for="taskPhoto">Фото задания <span class="optional">(не обязательно)</span></label>
+                    <input type="file" id="taskPhoto" accept="image/*" />
+                </div>
+                <div class="form-group">
+                    <label for="taskMainText">Что сделать? <span class="required">*</span></label>
+                    <input type="text" id="taskMainText" placeholder="Например: Помочь с математикой" required />
+                </div>
+                <div class="form-group">
+                    <label for="taskDetailText">Подробное описание <span class="optional">(не обязательно)</span></label>
+                    <textarea id="taskDetailText" placeholder="Класс, кабинет, время... (можно оставить пустым)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="taskCategory">Категория</label>
+                    <select id="taskCategory">
+                        <option value="study">📚 Учёба</option>
+                        <option value="help">🤝 Помощь</option>
+                        <option value="event">🎉 Мероприятие</option>
+                        <option value="secret">🔒 Секретное</option>
+                        <option value="shop">🛍️ Покупки</option>
+                        <option value="sport">⚽ Спорт</option>
+                        <option value="tech">💻 Техника</option>
+                        <option value="other">📌 Другое</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-publish">👻 Опубликовать анонимно</button>
+            </form>
+        </div>
+
+        <div class="modal-overlay" id="detailModal">
+            <div class="modal-content">
+                <button class="close-btn" id="modalCloseBtn">✕</button>
+                <img id="modalImage" src="" alt="Фото задания" />
+                <div class="main-text" id="modalMainText">Главный текст</div>
+                <div class="detail-text" id="modalDetailText">Подробное описание...</div>
+                <button class="respond-btn" id="modalRespondBtn">📩 Откликнуться</button>
+                <button class="delete-btn" id="modalDeleteBtn">🗑️ Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-tab="feed" id="navFeed">
+            <span class="nav-icon">🏠</span>
+            <span>Главная</span>
+            <span class="badge" id="taskCount">0</span>
+        </button>
+        <button class="nav-item" data-tab="account" id="navAccount">
+            <span class="nav-icon">👤</span>
+            <span>Аккаунт</span>
+        </button>
+    </nav>
+
+    <script>
+        (function() {
+            let tasks = [];
+            let currentModalId = null;
+
+            const feedContainer = document.getElementById('feedContainer');
+            const accountTab = document.getElementById('accountTab');
+            const navFeed = document.getElementById('navFeed');
+            const navAccount = document.getElementById('navAccount');
+            const createForm = document.getElementById('createTaskForm');
+            const modalOverlay = document.getElementById('detailModal');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+            const modalImage = document.getElementById('modalImage');
+            const modalMainText = document.getElementById('modalMainText');
+            const modalDetailText = document.getElementById('modalDetailText');
+            const modalRespondBtn = document.getElementById('modalRespondBtn');
+            const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+            const taskCount = document.getElementById('taskCount');
+
+            const categoryEmoji = {
+                'study': '📚',
+                'help': '🤝',
+                'event': '🎉',
+                'secret': '🔒',
+                'shop': '🛍️',
+                'sport': '⚽',
+                'tech': '💻',
+                'other': '📌'
+            };
+
+            const categoryNames = {
+                'study': 'Учёба',
+                'help': 'Помощь',
+                'event': 'Мероприятие',
+                'secret': 'Секретное',
+                'shop': 'Покупки',
+                'sport': 'Спорт',
+                'tech': 'Техника',
+                'other': 'Другое'
+            };
+
+            function loadTasks() {
+                try {
+                    const stored = localStorage.getItem('ghost_tasks_trusted_v2');
+                    if (stored) {
+                        tasks = JSON.parse(stored);
+                    } else {
+                        tasks = [{
+                            id: Date.now() - 100000,
+                            image: '',
+                            mainText: 'Помочь с математикой',
+                            detailText: 'Нужна помощь с домашним заданием по алгебре. 9 класс, кабинет 301, после уроков.',
+                            category: 'study',
+                            date: new Date().toISOString()
+                        }, {
+                            id: Date.now() - 50000,
+                            image: '',
+                            mainText: 'Секретная вечеринка',
+                            detailText: 'Собираемся после школы в парке. Приносите snacks! 🎉',
+                            category: 'event',
+                            date: new Date().toISOString()
+                        }, {
+                            id: Date.now() - 30000,
+                            image: '',
+                            mainText: 'Купить подарок',
+                            detailText: '',
+                            category: 'shop',
+                            date: new Date().toISOString()
+                        }];
+                        saveTasks();
+                    }
+                } catch (e) {
+                    tasks = [];
+                }
+                renderFeed();
+            }
+
+            function saveTasks() {
+                try {
+                    localStorage.setItem('ghost_tasks_trusted_v2', JSON.stringify(tasks));
+                } catch (e) {}
+            }
+
+            function renderFeed() {
+                if (tasks.length === 0) {
+                    feedContainer.innerHTML = `<div class="empty-state">🎒 Нет заданий. Создайте первое!</div>`;
+                    return;
+                }
+
+                feedContainer.innerHTML = '';
+                const sorted = [...tasks].reverse();
+                sorted.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = `task-card cat-${task.category || 'other'}`;
+                    card.dataset.id = task.id;
+
+                    const imageHtml = task.image 
+                        ? `<img src="${task.image}" alt="Фото" />` 
+                        : `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='180' viewBox='0 0 200 180'%3E%3Crect width='200' height='180' fill='%23141b24'/%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='%237b8aa3' text-anchor='middle' dy='.3em'%3E📚 Нет фото%3C/text%3E%3C/svg%3E" alt="Нет фото" />`;
+
+                    const emoji = categoryEmoji[task.category] || '📌';
+                    const name = categoryNames[task.category] || 'Другое';
+
+                    card.innerHTML = `
+                        ${imageHtml}
+                        <h3>${escapeHtml(task.mainText) || 'Без заголовка'}</h3>
+                        ${task.detailText ? `<p>${escapeHtml(task.detailText.substring(0, 80))}</p>` : ''}
+                        <div class="task-meta">
+                            <span>${emoji} ${name}</span>
+                            <span>🕐 ${new Date(task.date).toLocaleDateString('ru-RU')}</span>
+                        </div>
+                        <div class="category-badge" style="border-color: var(--accent); color: var(--accent);">
+                            ${emoji} ${name}
+                        </div>
+                    `;
+
+                    card.addEventListener('click', () => openDetail(task.id));
+                    feedContainer.appendChild(card);
+                });
+            }
+
+            function updateTaskCount() {
+                taskCount.textContent = tasks.length;
+            }
+
+            function openDetail(taskId) {
+                const task = tasks.find(t => t.id === taskId);
+                if (!task) return;
+
+                currentModalId = taskId;
+                modalImage.src = task.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220"%3E%3Crect width="400" height="220" fill="%23141b24"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%237b8aa3" text-anchor="middle" dy=".3em"%3E📚 Без фото%3C/text%3E%3C/svg%3E';
+                modalMainText.textContent = task.mainText || 'Без названия';
+                modalDetailText.textContent = task.detailText || 'Подробное описание отсутствует.';
+                modalOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeDetail() {
+                modalOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+                currentModalId = null;
+            }
+
+            function switchTab(tab) {
+                if (tab === 'feed') {
+                    feedContainer.style.display = 'flex';
+                    accountTab.classList.remove('active');
+                    navFeed.classList.add('active');
+                    navAccount.classList.remove('active');
+                } else {
+                    feedContainer.style.display = 'none';
+                    accountTab.classList.add('active');
+                    navAccount.classList.add('active');
+                    navFeed.classList.remove('active');
+                }
+            }
+
+            function escapeHtml(unsafe) {
+                if (!unsafe) return '';
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            function showToast(message) {
+                const existing = document.querySelector('.toast');
+                if (existing) existing.remove();
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            function addTask(mainText, detailText, imageDataUrl, category) {
+                const newTask = {
+                    id: Date.now(),
+                    image: imageDataUrl || '',
+                    mainText: mainText,
+                    detailText: detailText || '',
+                    category: category || 'other',
+                    date: new Date().toISOString()
+                };
+                tasks.push(newTask);
+                saveTasks();
+                renderFeed();
+                updateTaskCount();
+                createForm.reset();
+                switchTab('feed');
+                showToast('✅ Задание опубликовано!');
+            }
+
+            function deleteTask(taskId) {
+                if (confirm('🗑️ Удалить это задание?')) {
+                    tasks = tasks.filter(t => t.id !== taskId);
+                    saveTasks();
+                    renderFeed();
+                    updateTaskCount();
+                    closeDetail();
+                    showToast('🗑️ Задание удалено');
+                }
+            }
+
+            createForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const fileInput = document.getElementById('taskPhoto');
+                const mainText = document.getElementById('taskMainText').value.trim();
+                const detailText = document.getElementById('taskDetailText').value.trim();
+                const category = document.getElementById('taskCategory').value;
+
+                if (!mainText) {
+                    showToast('Пожалуйста, напишите, что нужно сделать.');
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        addTask(mainText, detailText, ev.target.result, category);
+                    };
+                    reader.onerror = function() {
+                        addTask(mainText, detailText, '', category);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    addTask(mainText, detailText, '', category);
+                }
+            });
+
+            modalRespondBtn.addEventListener('click', function() {
+                if (currentModalId) {
+                    showToast('📩 Отклик отправлен! С вами свяжутся.');
+                }
+                closeDetail();
+            });
+
+            modalDeleteBtn.addEventListener('click', function() {
+                if (currentModalId) {
+                    deleteTask(currentModalId);
+                }
+            });
+
+            modalCloseBtn.addEventListener('click', closeDetail);
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === modalOverlay) closeDetail();
+            });
+
+            navFeed.addEventListener('click', () => switchTab('feed'));
+            navAccount.addEventListener('click', () => switchTab('account'));
+
+            loadTasks();
+            updateTaskCount();
+            switchTab('feed');
+
+            console.log('👻 Ghost v3 загружен!');
+            console.log('📋 Категории: Учёба, Помощь, Мероприятие, Секретное, Покупки, Спорт, Техника, Другое');
+        })();
+    </script>
+
+</body>
+</html>
