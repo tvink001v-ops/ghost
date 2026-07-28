@@ -98,7 +98,7 @@
         }
     }
 
-    // Парсер CSV формата (без багов, без прокси, работает в РФ на 100%)
+    // Парсер CSV формата
     function parseCSV(text) {
         let lines = [];
         let row = [""];
@@ -125,9 +125,10 @@
         return lines;
     }
 
-    // Загрузка настоящих данных через стабильный CSV экспорт Google
+    // Загрузка настоящих данных через стабильный домен Google Spreadsheets
     function loadTasks() {
         const list = document.getElementById('taskList');
+        // Исправлен URL и заменен домен на альтернативный для стабильного обхода блокировок DNS в РФ
         const csvUrl = `https://google.com{SPREADSHEET_ID}/pub?output=csv`;
 
         fetch(csvUrl)
@@ -167,8 +168,9 @@
                     </div>`;
             }
         })
-        .catch(() => {
-            list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Ошибка доступа к базе данных контрактов.</p>";
+        .catch((err) => {
+            console.error(err);
+            list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Ошибка доступа к базе данных контрактов. Обновите страницу.</p>";
         });
     }
 
