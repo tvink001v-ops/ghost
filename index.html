@@ -653,6 +653,15 @@
 
         .main-content.hidden { display: none; }
 
+        .online-badge {
+            font-size: 0.6rem;
+            background: #238636;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 30px;
+            margin-left: 6px;
+        }
+
         @media (max-width: 400px) {
             .app-wrapper { padding: 12px 10px 20px; }
             .task-actions { gap: 6px; }
@@ -741,6 +750,7 @@
             <div class="chat-header-info">
                 <i class="fas fa-comment-dots"></i>
                 <span id="chatTitle">Чат</span>
+                <span class="online-badge" id="chatOnline">🟢 онлайн</span>
             </div>
             <button class="chat-close" id="chatClose"><i class="fas fa-times"></i></button>
         </div>
@@ -768,6 +778,7 @@
         let tasks = [];
         let chatTaskId = null;
         let chatMessages = [];
+        let chatChannel = null;
 
         // Элементы
         const registerOverlay = document.getElementById('registerOverlay');
@@ -783,6 +794,7 @@
         const chatSendBtn = document.getElementById('chatSendBtn');
         const chatTitle = document.getElementById('chatTitle');
         const chatClose = document.getElementById('chatClose');
+        const chatOnline = document.getElementById('chatOnline');
 
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
@@ -831,14 +843,12 @@
         async function ensureChatTable() {
             if (!isConfigured) return;
             try {
-                // Проверяем существование таблицы
                 const { error } = await supabase
                     .from('chat_messages')
                     .select('id')
                     .limit(1);
                 
                 if (error && error.code === '42P01') {
-                    // Таблица не существует — создаём через SQL
                     showToast('📦 Создаём таблицу чата...');
                     const { error: createError } = await supabase.rpc('exec_sql', {
                         sql: `
@@ -867,18 +877,73 @@
             }
         }
 
-        // ===== ЧАТ =====
+        // ===== ЧАТ С ПОДПИСКОЙ НА РЕАЛЬНОЕ ВРЕМЯ =====
+        function subscribeToChat(taskId) {
+            // Отписываемся от старого канала
+            if (chatChannel) {
+                supabase.removeChannel(chatChannel);
+                chatChannel = null;
+            }
+
+            if (!isConfigured || !taskId) return;
+
+            // Создаём канал для конкретного чата
+            chatChannel = supabase
+                .channel(`chat-${taskId}`)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'chat_messages',
+                        filter: `task_id=eq.${taskId}`
+                    },
+                    (payload) => {
+                        // Новое сообщение!
+                        const newMsg = payload.new;
+                        // Добавляем, если его ещё нет в списке
+                        if (!chatMessages.find(m => m.id === newMsg.id)) {
+                            chatMessages.push(newMsg);
+                            renderChatMessages();
+                            // Уведомление, если сообщение не от нас
+                            if (newMsg.author !== currentUser) {
+                                showToast(`💬 ${newMsg.author}: ${newMsg.message.substring(0, 30)}...`);
+                                if (navigator.vibrate) navigator.vibrate(50);
+                            }
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        chatOnline.textContent = '🟢 онлайн';
+                        chatOnline.style.color = '#238636';
+                    } else {
+                        chatOnline.textContent = '🔴 офлайн';
+                        chatOnline.style.color = '#da3633';
+                    }
+                });
+        }
+
         function openChat(taskId, title) {
             chatTaskId = taskId;
             chatTitle.textContent = `💬 ${title}`;
             chatMessages = [];
             chatMessagesEl.innerHTML = '<div style="text-align:center;color:#8b949e;padding:20px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div>';
             chatOverlay.classList.add('open');
+            
+            // Подписываемся на обновления чата
+            subscribeToChat(taskId);
+            
             loadChatMessages(taskId);
             setTimeout(() => chatInput.focus(), 300);
         }
 
         function closeChat() {
+            // Отписываемся от канала
+            if (chatChannel) {
+                supabase.removeChannel(chatChannel);
+                chatChannel = null;
+            }
             chatOverlay.classList.remove('open');
             chatTaskId = null;
         }
@@ -915,9 +980,7 @@
                                 <span style="font-size:0.8rem;opacity:0.7;">Попробуйте обновить страницу через минуту</span>
                             </div>
                         `;
-                        // Пытаемся создать таблицу
                         await ensureChatTable();
-                        // Повторяем загрузку через 2 секунды
                         setTimeout(() => loadChatMessages(taskId), 2000);
                         return;
                     }
@@ -988,7 +1051,6 @@
                     if (error.code === '42P01') {
                         showToast('📦 Создаём таблицу чата...');
                         await ensureChatTable();
-                        // Повторяем отправку
                         chatInput.value = text;
                         chatSendBtn.disabled = false;
                         setTimeout(() => sendChatMessage(), 1000);
@@ -998,6 +1060,7 @@
                 }
 
                 if (data && data.length > 0) {
+                    // Сообщение добавится через подписку, но добавим сразу для скорости
                     chatMessages.push(data[0]);
                     renderChatMessages();
                 }
@@ -1038,11 +1101,10 @@
                 isConfigured = true;
                 document.getElementById('statusDot').className = 'status-dot online';
                 
-                // Создаём таблицу чата при запуске
                 ensureChatTable();
-                
                 loadTasks();
-                // Автообновление каждые 3 секунды
+                
+                // Автообновление заданий каждые 3 секунды
                 setInterval(() => {
                     if (isConfigured) loadTasks();
                 }, 3000);
@@ -1117,7 +1179,6 @@
                 tasks = data || [];
                 renderTasks();
 
-                // Если появились новые задания — уведомление
                 if (tasks.length > oldCount && oldCount > 0) {
                     const newTask = tasks[0];
                     showToast(`📢 Новое задание: "${newTask.title}" от ${newTask.author}`);
