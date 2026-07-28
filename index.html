@@ -115,16 +115,20 @@
     function loadTasks() {
         const list = document.getElementById('taskList');
         
-        // Ссылка заменена на полностью готовую прямую текстовую ссылку без переменных
+        // Ссылка на вашу опубликованную CSV-таблицу
         const csvUrl = "https://google.com";
+        
+        // Проксируем запрос, чтобы обойти CORS-блокировки от Google
+        const proxyUrl = `https://allorigins.win{encodeURIComponent(csvUrl)}`;
 
-        fetch(csvUrl)
+        fetch(proxyUrl)
         .then(res => {
             if (!res.ok) throw new Error();
-            return res.text();
+            return res.json();
         })
-        .then(text => {
-            const rows = parseCSV(text);
+        .then(data => {
+            // allorigins возвращает ответ внутри поля data.contents
+            const rows = parseCSV(data.contents);
             if (!rows || rows.length <= 1) {
                 list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Нет активных контрактов.</p>";
                 return;
