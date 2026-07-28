@@ -2,203 +2,550 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ghost — Анонимные задания</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Доска заданий</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, sans-serif; }
-        :root {
-            --bg-primary: #0b0e14; --bg-secondary: #141b24; --bg-card: #181f2b;
-            --border: #29323e; --text: #e8edf5; --muted: #7b8aa3; --accent: #3a6090; --success: #4aaf7a;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
         }
-        body { background: var(--bg-primary); color: var(--text); display: flex; justify-content: center; padding: 20px 16px; }
-        .app { max-width: 500px; width: 100%; }
-        .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
-        h1 { font-size: 1.6rem; font-weight: 500; background: linear-gradient(135deg, #d6e2f5, #8aa1c9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 10px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--muted); border-radius: 40px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: 0.2s; border-style: solid; }
-        .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-        
-        .page { display: none; }
-        .page.active { display: block; }
-        
-        .feed { display: flex; flex-direction: column; gap: 12px; }
-        .task-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; position: relative; }
-        .task-card h3 { font-size: 1.1rem; font-weight: 500; margin-bottom: 6px; color: #fff; }
-        .task-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.4; margin-bottom: 10px; white-space: pre-wrap; }
-        .task-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; }
-        .reward-badge { color: var(--success); font-weight: 600; }
-        .time-stamp { color: #536279; }
+        body {
+            background: #0d1117;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+            color: #e6edf3;
+        }
+        .app-wrapper {
+            max-width: 900px;
+            width: 100%;
+            background: #161b22;
+            border-radius: 40px 40px 30px 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            padding: 24px 22px 36px;
+            border: 1px solid #30363d;
+        }
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            gap: 12px 10px;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            background: #238636;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 6px 12px rgba(35, 134, 54, 0.3);
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+            color: #f0f6fc;
+        }
+        .logo-text span { color: #238636; }
 
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
-        label { display: block; font-size: 0.75rem; color: var(--muted); margin: 12px 0 4px; text-transform: uppercase; }
-        input, textarea { width: 100%; background: #0b1119; border: 1px solid var(--border); padding: 12px; color: #fff; border-radius: 12px; outline: none; font-size: 0.95rem; }
-        input:focus, textarea:focus { border-color: var(--accent); }
-        
-        button.submit-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 50px; font-size: 1rem; font-weight: 500; cursor: pointer; margin-top: 20px; }
-        .status { text-align: center; font-size: 0.9rem; margin-top: 15px; display: none; padding: 12px; border-radius: 12px; }
-        .ok { display: block; background: rgba(74, 175, 122, 0.1); color: var(--success); border: 1px solid rgba(74, 175, 122, 0.2); }
+        /* Секция создания */
+        .create-section {
+            background: #0d1117;
+            border-radius: 30px;
+            padding: 20px 22px 26px;
+            margin-bottom: 30px;
+            border: 1px solid #30363d;
+        }
+        .create-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: #f0f6fc;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .create-title i { color: #238636; }
+        .create-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .create-input-group {
+            flex: 3 1 220px;
+            min-width: 180px;
+        }
+        .create-input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #8b949e;
+            margin-bottom: 5px;
+        }
+        .create-input-group input,
+        .create-input-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #e6edf3;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            outline: none;
+        }
+        .create-input-group textarea {
+            border-radius: 20px;
+            resize: vertical;
+            min-height: 50px;
+            font-family: inherit;
+        }
+        .create-input-group input:focus,
+        .create-input-group textarea:focus {
+            border-color: #238636;
+            box-shadow: 0 0 0 4px rgba(35, 134, 54, 0.15);
+        }
+        .create-input-group input::placeholder,
+        .create-input-group textarea::placeholder {
+            color: #8b949e;
+        }
+        .create-btn {
+            background: #238636;
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 6px 14px rgba(35, 134, 54, 0.3);
+            flex: 0 1 auto;
+            height: 50px;
+            white-space: nowrap;
+        }
+        .create-btn:hover {
+            background: #2ea043;
+            transform: scale(0.97);
+        }
+        .remote-badge {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #8b949e;
+            background: #0d1117;
+            padding: 4px 16px;
+            border-radius: 60px;
+            display: inline-block;
+            border: 1px solid #30363d;
+        }
+        .remote-badge i { margin-right: 6px; color: #238636; }
+
+        /* Список */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 12px 0 16px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .list-header h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+        .list-header h2 i { color: #238636; margin-right: 10px; }
+        .list-header span {
+            background: #0d1117;
+            padding: 4px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #8b949e;
+            border: 1px solid #30363d;
+        }
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .task-card {
+            background: #0d1117;
+            border-radius: 26px;
+            padding: 18px 18px 20px;
+            border: 1px solid #30363d;
+            transition: 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .task-card:hover {
+            border-color: #238636;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
+        .task-title {
+            font-weight: 600;
+            font-size: 1.15rem;
+            color: #f0f6fc;
+            margin-bottom: 4px;
+        }
+        .task-desc {
+            font-size: 0.95rem;
+            color: #8b949e;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            flex: 1;
+            word-break: break-word;
+        }
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            border-top: 1px solid #30363d;
+            padding-top: 14px;
+        }
+        .task-author {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #8b949e;
+        }
+        .task-author i { font-size: 1rem; color: #238636; }
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            border: none;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #21262d;
+            color: #c9d1d9;
+        }
+        .btn-action:hover { background: #30363d; }
+        .btn-action.take {
+            background: #238636;
+            color: white;
+        }
+        .btn-action.take:hover { background: #2ea043; }
+        .btn-action.done {
+            background: #1f6feb;
+            color: white;
+        }
+        .btn-action.done:hover { background: #388bfd; }
+        .btn-action.delete {
+            background: #da3633;
+            color: white;
+        }
+        .btn-action.delete:hover { background: #f85149; }
+        .task-status {
+            font-size: 0.7rem;
+            background: #238636;
+            color: #f0f6fc;
+            padding: 2px 14px;
+            border-radius: 40px;
+            font-weight: 600;
+        }
+        .task-status.taken {
+            background: #d29922;
+            color: #f0f6fc;
+        }
+
+        .footer-note {
+            margin-top: 32px;
+            font-size: 0.85rem;
+            color: #8b949e;
+            text-align: center;
+            border-top: 1px solid #30363d;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .footer-note i { margin-right: 4px; color: #238636; }
+
+        /* Пустое состояние */
+        .empty-state {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 40px 20px;
+            background: #0d1117;
+            border-radius: 40px;
+            color: #8b949e;
+            border: 1px dashed #30363d;
+        }
+        .empty-state i {
+            font-size: 2.2rem;
+            opacity: 0.5;
+            margin-bottom: 12px;
+            display: block;
+            color: #238636;
+        }
+
+        @media (max-width: 620px) {
+            .app-wrapper { padding: 16px; }
+            .create-section { padding: 18px; }
+            .create-btn { width: 100%; justify-content: center; }
+            .logo-text { font-size: 1.2rem; }
+        }
+        @media (max-width: 460px) {
+            .header { flex-direction: column; align-items: stretch; }
+        }
     </style>
 </head>
 <body>
-
-<div class="app">
+<div class="app-wrapper">
+    <!-- Шапка -->
     <div class="header">
-        <h1>GHOST</h1>
-        <div style="color: var(--success); font-size: 0.8rem; font-weight: bold;">● ONLINE</div>
-    </div>
-    
-    <div class="tabs">
-        <button id="btn-feed" class="tab-btn active" onclick="switchTab('feed-page')">Контракты</button>
-        <button id="btn-create" class="tab-btn" onclick="switchTab('create-page')">Создать контракт</button>
-    </div>
-
-    <!-- Вкладка 1: Список контрактов -->
-    <div id="feed-page" class="page active">
-        <div id="taskList" class="feed">Загрузка актуальных контрактов...</div>
-    </div>
-
-    <!-- Вкладка 2: Форма создания -->
-    <div id="create-page" class="page">
-        <div class="card">
-            <form id="ghostForm">
-                <label>Кодовое название услуги</label>
-                <input type="text" id="title" placeholder="Передача пакета" required>
-                
-                <label>Описание контракта</label>
-                <textarea id="desc" rows="4" placeholder="Суть, локация, условия..." required></textarea>
-                
-                <label>Гонорар</label>
-                <input type="text" id="reward" placeholder="5000 руб / XMR" required>
-
-                <button type="submit" class="submit-btn">Опубликовать в сети</button>
-            </form>
-            <div id="status" class="status"></div>
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-tasks"></i></div>
+            <div class="logo-text">Доска <span>заданий</span></div>
         </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: #0d1117; padding: 6px 16px 6px 12px; border-radius: 40px; border: 1px solid #30363d;">
+            <i class="fas fa-user" style="color: #238636;"></i>
+            <span style="font-size: 0.9rem; color: #e6edf3;">Вы</span>
+        </div>
+    </div>
+
+    <!-- Создание задания -->
+    <div class="create-section">
+        <div class="create-title">
+            <i class="fas fa-plus-circle"></i> Создать задание
+        </div>
+        <div class="create-grid">
+            <div class="create-input-group" style="flex: 2 1 200px;">
+                <label for="taskTitleInput"><i class="far fa-file-alt"></i> Название *</label>
+                <input type="text" id="taskTitleInput" placeholder="Например: Помогите с физикой">
+            </div>
+            <div class="create-input-group" style="flex: 3 1 260px;">
+                <label for="taskDescInput"><i class="fas fa-align-left"></i> Описание</label>
+                <textarea id="taskDescInput" rows="1" placeholder="Что нужно сделать..."></textarea>
+            </div>
+            <button class="create-btn" id="addTaskBtn"><i class="fas fa-plus"></i> Добавить</button>
+        </div>
+        <div class="remote-badge">
+            <i class="fas fa-globe-americas"></i> Все задания выполняются удалённо
+        </div>
+    </div>
+
+    <!-- Список -->
+    <div class="list-header">
+        <h2><i class="fas fa-list-ul"></i>Доступные задания</h2>
+        <span><i class="fas fa-user-friends"></i> <span id="taskCount">0</span> заданий</span>
+    </div>
+
+    <div class="tasks-grid" id="tasksContainer">
+        <!-- Карточки генерируются JS -->
+    </div>
+
+    <div class="footer-note">
+        <span><i class="fas fa-check-circle"></i> Создавай любые задания</span>
+        <span><i class="fas fa-handshake"></i> Помогай другим</span>
+        <span><i class="fas fa-edit"></i> Отмечай выполненными</span>
     </div>
 </div>
 
 <script>
-    var FORM_URL = "https://google.com";
-    var FIELDS = ["entry.1746401037", "entry.1508215891", "entry.724816159"];
+    (function() {
+        const STORAGE_KEY = 'dark_board_tasks';
 
-    function switchTab(pageId) {
-        document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-        
-        document.getElementById(pageId).classList.add('active');
-        if (pageId === 'feed-page') {
-            document.getElementById('btn-feed').classList.add('active');
-            loadTasks();
-        } else {
-            document.getElementById('btn-create').classList.add('active');
+        let tasks = [];
+
+        function loadTasks() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        tasks = parsed;
+                        return;
+                    }
+                } catch (e) {}
+            }
+            // Пустой список — никаких фейков!
+            tasks = [];
+            saveTasks();
         }
-    }
 
-    function parseCSV(text) {
-        let lines = []; let row = [""]; let inQuotes = false;
-        for (let i = 0; i < text.length; i++) {
-            let c = text[i]; let next = text[i+1];
-            if (c === '"') {
-                if (inQuotes && next === '"') { row[row.length - 1] += '"'; i++; }
-                else { inQuotes = !inQuotes; }
-            } else if (c === ',' && !inQuotes) { row.push(''); }
-            else if ((c === '\r' || c === '\n') && !inQuotes) {
-                if (c === '\r' && next === '\n') { i++; }
-                lines.push(row); row = [''];
-            } else { row[row.length - 1] += c; }
+        function saveTasks() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
         }
-        if (row.length > 1 || row !== '') lines.push(row);
-        return lines;
-    }
 
-    function loadTasks() {
-        var list = document.getElementById('taskList');
-        
-        // Оригинальная ссылка на ваш CSV-файл Google
-        var csvUrl = "https://google.com";
-        
-        // Публичный CORS-прокси. Ссылка собирается максимально надежным методом.
-        var finalApiUrl = "https://allorigins.win" + encodeURIComponent(csvUrl) + "&_nocache=" + Date.now();
+        function renderTasks() {
+            const container = document.getElementById('tasksContainer');
+            if (!container) return;
 
-        fetch(finalApiUrl)
-        .then(function(res) {
-            if (!res.ok) throw new Error("Network error");
-            return res.json();
-        })
-        .then(function(jsonData) {
-            // Разбираем CSV-строки из ответа прокси-сервера
-            var rows = parseCSV(jsonData.contents);
-            if (!rows || rows.length <= 1) {
-                list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Нет активных контрактов.</p>";
+            // Обновляем счётчик
+            document.getElementById('taskCount').textContent = tasks.length;
+
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        Пока нет заданий. Создайте первое!
+                    </div>
+                `;
                 return;
             }
 
-            list.innerHTML = "";
+            container.innerHTML = tasks.map(task => {
+                const statusLabel = task.taken ? 
+                    '<span class="task-status taken"><i class="fas fa-user-check"></i> В работе</span>' : 
+                    '<span class="task-status"><i class="fas fa-clock"></i> Свободно</span>';
 
-            // Сортировка от новых к старым
-            for (var i = rows.length - 1; i >= 1; i--) {
-                var cells = rows[i];
-                if (!cells || cells.length < 4) continue;
+                return `
+                    <div class="task-card" data-id="${task.id}">
+                        <div class="task-title">${escapeHtml(task.title)}</div>
+                        <div class="task-desc">${escapeHtml(task.description || 'Без описания')}</div>
+                        <div class="task-meta">
+                            <span class="task-author"><i class="fas fa-user-graduate"></i> ${escapeHtml(task.author || 'Вы')}</span>
+                            ${statusLabel}
+                        </div>
+                        <div class="task-actions">
+                            ${!task.taken ? `<button class="btn-action take" data-id="${task.id}"><i class="fas fa-hand-holding-heart"></i> Взять</button>` : ''}
+                            <button class="btn-action done" data-id="${task.id}"><i class="fas fa-check"></i> Выполнено</button>
+                            <button class="btn-action delete" data-id="${task.id}"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
-                var time = cells[0] || "Недавно";
-                var title = cells[1] || "Без названия";
-                var desc = cells[2] || "Описание отсутствует";
-                var reward = cells[3] || "Не указана";
+            // Обработчики
+            document.querySelectorAll('.task-actions .take').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.getAttribute('data-id'), 10);
+                    const task = tasks.find(t => t.id === id);
+                    if (task && !task.taken) {
+                        task.taken = true;
+                        saveTasks();
+                        renderTasks();
+                        alert(`✅ Вы взяли задание: "${task.title}"\nСвяжитесь с автором в чате.`);
+                    }
+                });
+            });
 
-                list.innerHTML += '<div class="task-card">' +
-                    '<h3>' + escapeHtml(title) + '</h3>' +
-                    '<p>' + escapeHtml(desc) + '</p>' +
-                    '<div class="task-meta">' +
-                        '<span class="reward-badge">💰 Награда: ' + escapeHtml(reward) + '</span>' +
-                        '<span class="time-stamp">' + escapeHtml(time) + '</span>' +
-                    '</div>' +
-                '</div>';
+            document.querySelectorAll('.task-actions .done').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.getAttribute('data-id'), 10);
+                    const task = tasks.find(t => t.id === id);
+                    if (task) {
+                        if (confirm(`Отметить "${task.title}" как выполненное?`)) {
+                            tasks = tasks.filter(t => t.id !== id);
+                            saveTasks();
+                            renderTasks();
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.task-actions .delete').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.getAttribute('data-id'), 10);
+                    const task = tasks.find(t => t.id === id);
+                    if (task) {
+                        if (confirm(`Удалить задание "${task.title}"?`)) {
+                            tasks = tasks.filter(t => t.id !== id);
+                            saveTasks();
+                            renderTasks();
+                        }
+                    }
+                });
+            });
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function addTask() {
+            const titleInput = document.getElementById('taskTitleInput');
+            const descInput = document.getElementById('taskDescInput');
+
+            const title = titleInput.value.trim();
+            const description = descInput.value.trim() || 'Без описания';
+
+            if (!title) {
+                alert('Пожалуйста, напишите название задания');
+                return;
             }
-        })
-        .catch(function(err) {
-            console.error(err);
-            list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Ошибка доступа к базе данных контрактов. Пожалуйста, сбросьте кэш страницы (Ctrl+F5) через 1 минуту.</p>";
-        });
-    }
 
-    document.getElementById('ghostForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        var btn = e.target.querySelector('button');
-        var box = document.getElementById('status');
-        
-        btn.disabled = true;
-        btn.innerText = "ШИФРОВАНИЕ...";
+            const maxId = tasks.reduce((max, t) => (t.id > max ? t.id : max), 0);
+            const newTask = {
+                id: maxId + 1,
+                title: title,
+                author: 'Вы',
+                description: description,
+                taken: false
+            };
 
-        var data = new URLSearchParams();
-        FIELDS.forEach(function(fieldId, i) {
-            var inputId = ["title", "desc", "reward"][i];
-            data.append(fieldId, document.getElementById(inputId).value);
-        });
+            tasks.push(newTask);
+            saveTasks();
 
-        fetch(FORM_URL, { method: 'POST', mode: 'no-cors', body: data })
-        .then(function() {
-            box.className = "status ok";
-            box.innerText = "Контракт опубликован.";
-            box.style.display = "block";
-            e.target.reset();
-            setTimeout(function() { switchTab('feed-page'); box.style.display = "none"; }, 1500);
-        })
-        .catch(function() {
-            alert("Ошибка при отправке поручения. Проверьте сеть.");
-        })
-        .finally(function() {
-            btn.disabled = false;
-            btn.innerText = "Опубликовать в сети";
-        });
-    });
+            titleInput.value = '';
+            descInput.value = '';
 
-    function escapeHtml(text) {
-        return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
+            renderTasks();
+            document.getElementById('tasksContainer').scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
 
-    loadTasks();
+        function init() {
+            loadTasks();
+            renderTasks();
+
+            const addBtn = document.getElementById('addTaskBtn');
+            if (addBtn) addBtn.addEventListener('click', addTask);
+
+            const titleInput = document.getElementById('taskTitleInput');
+            if (titleInput) {
+                titleInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addTask();
+                    }
+                });
+            }
+        }
+
+        init();
+    })();
 </script>
-
 </body>
 </html>
