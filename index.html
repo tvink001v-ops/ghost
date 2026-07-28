@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Ghost — Анонимные задания</title>
+    <title>Ghost — Задания и Чаты</title>
     <style>
         * {
             margin: 0;
@@ -95,7 +95,7 @@
             letter-spacing: -0.5px;
         }
 
-        .header .trust-badge {
+        .header .online-count {
             margin-left: auto;
             background: rgba(74, 175, 122, 0.15);
             border: 1px solid var(--success);
@@ -103,7 +103,6 @@
             padding: 4px 12px;
             font-size: 0.6rem;
             color: var(--success);
-            letter-spacing: 0.5px;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -217,8 +216,14 @@
         }
 
         @keyframes slideUp {
-            from { transform: translateY(40px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(40px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .modal-content .close-btn {
@@ -418,6 +423,365 @@
             transform: scale(1.02);
         }
 
+        /* --- Стили для чатов и контактов --- */
+        .chat-section,
+        .group-chat-section {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .chat-section.active,
+        .group-chat-section.active {
+            display: block;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chat-header h3 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .chat-header .close-chat {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .chat-message {
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            background: var(--bg-input);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            max-width: 85%;
+        }
+
+        .chat-message.own {
+            margin-left: auto;
+            background: var(--accent);
+            color: white;
+        }
+
+        .chat-message .time {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .chat-input-group input {
+            flex: 1;
+            padding: 10px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .chat-input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .chat-input-group button {
+            padding: 10px 20px;
+            background: var(--accent);
+            border: none;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .chat-input-group button:hover {
+            background: var(--accent-hover);
+        }
+
+        .contacts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--bg-input);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .contact-item:hover {
+            border-color: var(--accent);
+        }
+
+        .contact-item .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .contact-item .contact-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .contact-item .contact-name {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .contact-item .contact-status {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .contact-item .invite-btn {
+            padding: 4px 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+
+        .contact-item .invite-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .contact-item .invite-btn.selected {
+            background: var(--success);
+        }
+
+        /* --- Создание группы как в Telegram --- */
+        .group-create-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .group-create-modal.active {
+            display: flex;
+        }
+
+        .group-create-content {
+            background: var(--bg-secondary);
+            border-radius: 28px 28px 0 0;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px 20px 30px;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .group-create-content .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .group-create-content .modal-header h2 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .group-create-content .modal-header .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .group-create-content .group-name-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 16px;
+        }
+
+        .group-create-content .group-name-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .group-create-content .selected-members {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: var(--bg-input);
+            border-radius: 12px;
+            min-height: 44px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .group-create-content .selected-member {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent);
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .group-create-content .selected-member .remove-member {
+            cursor: pointer;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .group-create-content .selected-member .remove-member:hover {
+            opacity: 1;
+        }
+
+        .group-create-content .contacts-select {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .group-create-content .contact-select-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .group-create-content .contact-select-item:hover {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        .group-create-content .contact-select-item.selected {
+            background: rgba(58, 96, 144, 0.2);
+            border-color: var(--accent);
+        }
+
+        .group-create-content .contact-select-item .checkbox {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .group-create-content .contact-select-item.selected .checkbox {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .group-create-content .contact-select-item.selected .checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 0.7rem;
+        }
+
+        .group-create-content .contact-select-item .contact-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .group-create-content .create-group-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 60px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 16px;
+        }
+
+        .group-create-content .create-group-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+
+        .group-create-content .create-group-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -455,6 +819,18 @@
             line-height: 1;
         }
 
+        .nav-item .nav-icon img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .nav-item.active .nav-icon img {
+            opacity: 1;
+        }
+
         .nav-item.active {
             color: var(--text-primary);
         }
@@ -463,7 +839,7 @@
             position: absolute;
             top: -4px;
             right: 4px;
-            background: var(--accent);
+            background: var(--danger);
             color: white;
             border-radius: 40px;
             font-size: 0.6rem;
@@ -494,19 +870,41 @@
             text-align: center;
         }
 
-        /* Цвета для категорий */
-        .cat-study { border-left: 4px solid var(--accent); }
-        .cat-help { border-left: 4px solid var(--success); }
-        .cat-event { border-left: 4px solid var(--warning); }
-        .cat-secret { border-left: 4px solid var(--purple); }
-        .cat-shop { border-left: 4px solid var(--pink); }
-        .cat-sport { border-left: 4px solid var(--orange); }
-        .cat-tech { border-left: 4px solid var(--cyan); }
-        .cat-other { border-left: 4px solid var(--text-muted); }
+        .cat-study {
+            border-left: 4px solid var(--accent);
+        }
+        .cat-help {
+            border-left: 4px solid var(--success);
+        }
+        .cat-event {
+            border-left: 4px solid var(--warning);
+        }
+        .cat-secret {
+            border-left: 4px solid var(--purple);
+        }
+        .cat-shop {
+            border-left: 4px solid var(--pink);
+        }
+        .cat-sport {
+            border-left: 4px solid var(--orange);
+        }
+        .cat-tech {
+            border-left: 4px solid var(--cyan);
+        }
+        .cat-other {
+            border-left: 4px solid var(--text-muted);
+        }
 
         @media (max-width: 480px) {
-            .header h1 { font-size: 1.5rem; }
-            .modal-content { padding: 20px 16px; }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .modal-content {
+                padding: 20px 16px;
+            }
+            .group-create-content {
+                padding: 20px 16px;
+            }
         }
     </style>
 </head>
@@ -518,13 +916,40 @@
                 <img src="https://github.com/tvink001v-ops/ghost/blob/main/%D0%91%D0%B5%D0%B7%20%D0%BD%D0%B0%D0%B7%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F28_20260729001722.png?raw=true" alt="Ghost Logo" />
             </div>
             <h1>GHOST</h1>
-            <div class="trust-badge">🔒 ДОВЕРЕННЫЙ</div>
+            <div class="online-count">🟢 Онлайн</div>
         </header>
 
         <div id="feedContainer" class="feed">
             <div class="empty-state">Нет заданий. Создайте первое!</div>
         </div>
 
+        <!-- Личный чат -->
+        <div class="chat-section" id="chatSection">
+            <div class="chat-header">
+                <h3>💬 Чат с <span id="chatPartnerName"></span></h3>
+                <button class="close-chat" id="closeChatBtn">✕</button>
+            </div>
+            <div id="chatMessages"></div>
+            <div class="chat-input-group">
+                <input type="text" id="chatInput" placeholder="Напиши сообщение..." maxlength="500" />
+                <button id="chatSendBtn">📨</button>
+            </div>
+        </div>
+
+        <!-- Групповой чат -->
+        <div class="group-chat-section" id="groupChatSection">
+            <div class="chat-header">
+                <h3>👥 <span id="groupChatName"></span></h3>
+                <button class="close-chat" id="closeGroupChatBtn">✕</button>
+            </div>
+            <div id="groupChatMessages"></div>
+            <div class="chat-input-group">
+                <input type="text" id="groupChatInput" placeholder="Напиши сообщение..." maxlength="500" />
+                <button id="groupChatSendBtn">📨</button>
+            </div>
+        </div>
+
+        <!-- Вкладка Аккаунт -->
         <div id="accountTab" class="account-tab">
             <h2>Создать задание</h2>
             <form id="createTaskForm" class="create-form">
@@ -538,7 +963,7 @@
                 </div>
                 <div class="form-group">
                     <label for="taskDetailText">Подробное описание <span class="optional">(не обязательно)</span></label>
-                    <textarea id="taskDetailText" placeholder="Класс, кабинет, время... (можно оставить пустым)"></textarea>
+                    <textarea id="taskDetailText" placeholder="Класс, кабинет, время..."></textarea>
                 </div>
                 <div class="form-group">
                     <label for="taskCategory">Категория</label>
@@ -557,6 +982,28 @@
             </form>
         </div>
 
+        <!-- Вкладка Чаты -->
+        <div id="chatsTab" style="display: none;">
+            <h2 style="margin-bottom: 12px;">👥 Контакты и чаты</h2>
+
+            <!-- Кнопка создания группы -->
+            <button id="showGroupCreateBtn" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:16px; color:white; font-size:1rem; cursor:pointer; margin-bottom:16px; transition: all 0.2s;">
+                ➕ Создать группу
+            </button>
+
+            <!-- Список контактов -->
+            <div class="contacts-list" id="contactsContainer">
+                <!-- Контакты будут добавлены через JS -->
+            </div>
+
+            <!-- Список групповых чатов -->
+            <div style="margin-top: 16px;">
+                <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">📢 Групповые чаты</h3>
+                <div id="groupChatsList"></div>
+            </div>
+        </div>
+
+        <!-- Модалка задания -->
         <div class="modal-overlay" id="detailModal">
             <div class="modal-content">
                 <button class="close-btn" id="modalCloseBtn">✕</button>
@@ -569,27 +1016,73 @@
         </div>
     </div>
 
+    <!-- Модалка создания группы (как в Telegram) -->
+    <div class="group-create-modal" id="groupCreateModal">
+        <div class="group-create-content">
+            <div class="modal-header">
+                <h2>👥 Новая группа</h2>
+                <button class="close-modal" id="closeGroupModal">✕</button>
+            </div>
+
+            <input type="text" class="group-name-input" id="newGroupName" placeholder="Название группы..." />
+
+            <div class="selected-members" id="selectedMembers">
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Выберите участников...</span>
+            </div>
+
+            <div class="contacts-select" id="contactsSelect">
+                <!-- Контакты для выбора будут добавлены через JS -->
+            </div>
+
+            <button class="create-group-btn" id="createGroupBtn" disabled>Создать группу</button>
+        </div>
+    </div>
+
+    <!-- Нижняя навигация -->
     <nav class="bottom-nav">
         <button class="nav-item active" data-tab="feed" id="navFeed">
-            <span class="nav-icon">🏠</span>
+            <span class="nav-icon">
+                <img src="https://github.com/tvink001v-ops/ghost/blob/main/4021479.png?raw=true" alt="Главная" onerror="this.style.display='none'; this.parentElement.textContent='🏠'" />
+            </span>
             <span>Главная</span>
             <span class="badge" id="taskCount">0</span>
         </button>
         <button class="nav-item" data-tab="account" id="navAccount">
-            <span class="nav-icon">👤</span>
+            <span class="nav-icon">
+                <img src="https://github.com/tvink001v-ops/ghost/blob/main/17874965.png?raw=true" alt="Аккаунт" onerror="this.style.display='none'; this.parentElement.textContent='👤'" />
+            </span>
             <span>Аккаунт</span>
+        </button>
+        <button class="nav-item" data-tab="chats" id="navChats">
+            <span class="nav-icon">
+                <img src="https://github.com/tvink001v-ops/ghost/blob/main/9374926.png?raw=true" alt="Чаты" onerror="this.style.display='none'; this.parentElement.textContent='💬'" />
+            </span>
+            <span>Чаты</span>
+            <span class="badge" id="chatBadge" style="display: none;">!</span>
         </button>
     </nav>
 
     <script>
         (function() {
+            // --- СОСТОЯНИЕ ---
             let tasks = [];
+            let privateChats = {};
+            let groupChats = {};
+            let contacts = [];
             let currentModalId = null;
+            let currentChatId = null;
+            let currentGroupId = null;
+            let userId = 'user_' + Math.random().toString(36).substr(2, 6);
+            let userName = 'Ученик_' + Math.floor(Math.random() * 1000);
+            let selectedContacts = [];
 
+            // --- DOM ---
             const feedContainer = document.getElementById('feedContainer');
             const accountTab = document.getElementById('accountTab');
+            const chatsTab = document.getElementById('chatsTab');
             const navFeed = document.getElementById('navFeed');
             const navAccount = document.getElementById('navAccount');
+            const navChats = document.getElementById('navChats');
             const createForm = document.getElementById('createTaskForm');
             const modalOverlay = document.getElementById('detailModal');
             const modalCloseBtn = document.getElementById('modalCloseBtn');
@@ -599,91 +1092,122 @@
             const modalRespondBtn = document.getElementById('modalRespondBtn');
             const modalDeleteBtn = document.getElementById('modalDeleteBtn');
             const taskCount = document.getElementById('taskCount');
+            const chatSection = document.getElementById('chatSection');
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInput = document.getElementById('chatInput');
+            const chatSendBtn = document.getElementById('chatSendBtn');
+            const closeChatBtn = document.getElementById('closeChatBtn');
+            const chatPartnerName = document.getElementById('chatPartnerName');
+            const groupChatSection = document.getElementById('groupChatSection');
+            const groupChatMessages = document.getElementById('groupChatMessages');
+            const groupChatInput = document.getElementById('groupChatInput');
+            const groupChatSendBtn = document.getElementById('groupChatSendBtn');
+            const closeGroupChatBtn = document.getElementById('closeGroupChatBtn');
+            const groupChatName = document.getElementById('groupChatName');
+            const contactsContainer = document.getElementById('contactsContainer');
+            const groupChatsList = document.getElementById('groupChatsList');
+            const chatBadge = document.getElementById('chatBadge');
+            const showGroupCreateBtn = document.getElementById('showGroupCreateBtn');
+            const groupCreateModal = document.getElementById('groupCreateModal');
+            const closeGroupModal = document.getElementById('closeGroupModal');
+            const newGroupName = document.getElementById('newGroupName');
+            const selectedMembers = document.getElementById('selectedMembers');
+            const contactsSelect = document.getElementById('contactsSelect');
+            const createGroupBtn = document.getElementById('createGroupBtn');
 
-            const categoryEmoji = {
-                'study': '📚',
-                'help': '🤝',
-                'event': '🎉',
-                'secret': '🔒',
-                'shop': '🛍️',
-                'sport': '⚽',
-                'tech': '💻',
-                'other': '📌'
-            };
-
-            const categoryNames = {
-                'study': 'Учёба',
-                'help': 'Помощь',
-                'event': 'Мероприятие',
-                'secret': 'Секретное',
-                'shop': 'Покупки',
-                'sport': 'Спорт',
-                'tech': 'Техника',
-                'other': 'Другое'
-            };
-
-            function loadTasks() {
+            // --- ЗАГРУЗКА ДАННЫХ ---
+            function loadData() {
                 try {
-                    const stored = localStorage.getItem('ghost_tasks_trusted_v2');
-                    if (stored) {
-                        tasks = JSON.parse(stored);
-                    } else {
-                        tasks = [{
-                            id: Date.now() - 100000,
-                            image: '',
-                            mainText: 'Помочь с математикой',
-                            detailText: 'Нужна помощь с домашним заданием по алгебре. 9 класс, кабинет 301, после уроков.',
-                            category: 'study',
-                            date: new Date().toISOString()
-                        }, {
-                            id: Date.now() - 50000,
-                            image: '',
-                            mainText: 'Секретная вечеринка',
-                            detailText: 'Собираемся после школы в парке. Приносите snacks! 🎉',
-                            category: 'event',
-                            date: new Date().toISOString()
-                        }, {
-                            id: Date.now() - 30000,
-                            image: '',
-                            mainText: 'Купить подарок',
-                            detailText: '',
-                            category: 'shop',
-                            date: new Date().toISOString()
-                        }];
+                    const storedTasks = localStorage.getItem('ghost_tasks_v7');
+                    if (storedTasks) tasks = JSON.parse(storedTasks);
+                    else {
+                        tasks = [
+                            { id: Date.now() - 100000, image: '', mainText: 'Помочь с математикой', detailText: '9 класс, кабинет 301',
+                                category: 'study', date: new Date().toISOString(), author: 'Аноним' },
+                            { id: Date.now() - 50000, image: '', mainText: 'Секретная вечеринка', detailText: 'В парке после школы',
+                                category: 'event', date: new Date().toISOString(), author: 'Аноним' }
+                        ];
                         saveTasks();
+                    }
+
+                    const storedPrivate = localStorage.getItem('ghost_private_chats_v7');
+                    if (storedPrivate) privateChats = JSON.parse(storedPrivate);
+                    else privateChats = {};
+
+                    const storedGroup = localStorage.getItem('ghost_group_chats_v7');
+                    if (storedGroup) groupChats = JSON.parse(storedGroup);
+                    else {
+                        const defaultGroupId = 'group_' + Date.now();
+                        groupChats = {
+                            [defaultGroupId]: {
+                                name: 'Общий чат',
+                                members: [userId],
+                                messages: [
+                                    { text: 'Добро пожаловать в общий чат!', time: Date.now(), from: 'system' }
+                                ]
+                            }
+                        };
+                        saveGroupChats();
+                    }
+
+                    const storedContacts = localStorage.getItem('ghost_contacts_v7');
+                    if (storedContacts) contacts = JSON.parse(storedContacts);
+                    else {
+                        contacts = [
+                            { id: 'contact_1', name: 'Алексей' },
+                            { id: 'contact_2', name: 'Мария' },
+                            { id: 'contact_3', name: 'Дмитрий' },
+                            { id: 'contact_4', name: 'Екатерина' },
+                            { id: 'contact_5', name: 'Сергей' }
+                        ];
+                        saveContacts();
                     }
                 } catch (e) {
                     tasks = [];
+                    privateChats = {};
+                    groupChats = {};
+                    contacts = [];
                 }
+                updateUI();
+                renderContacts();
+                renderGroupChatsList();
+            }
+
+            function saveTasks() { try { localStorage.setItem('ghost_tasks_v7', JSON.stringify(tasks)); } catch (e) {} }
+
+            function savePrivateChats() { try { localStorage.setItem('ghost_private_chats_v7', JSON.stringify(privateChats)); } catch (
+                e) {} }
+
+            function saveGroupChats() { try { localStorage.setItem('ghost_group_chats_v7', JSON.stringify(groupChats)); } catch (
+                e) {} }
+
+            function saveContacts() { try { localStorage.setItem('ghost_contacts_v7', JSON.stringify(contacts)); } catch (e) {} }
+
+            function updateUI() {
                 renderFeed();
+                updateTaskCount();
+                updateChatBadge();
             }
 
-            function saveTasks() {
-                try {
-                    localStorage.setItem('ghost_tasks_trusted_v2', JSON.stringify(tasks));
-                } catch (e) {}
-            }
-
+            // --- РЕНДЕР ЛЕНТЫ ---
             function renderFeed() {
                 if (tasks.length === 0) {
                     feedContainer.innerHTML = `<div class="empty-state">🎒 Нет заданий. Создайте первое!</div>`;
                     return;
                 }
-
                 feedContainer.innerHTML = '';
-                const sorted = [...tasks].reverse();
-                sorted.forEach(task => {
+                [...tasks].reverse().forEach(task => {
                     const card = document.createElement('div');
                     card.className = `task-card cat-${task.category || 'other'}`;
                     card.dataset.id = task.id;
-
-                    const imageHtml = task.image 
-                        ? `<img src="${task.image}" alt="Фото" />` 
-                        : `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='180' viewBox='0 0 200 180'%3E%3Crect width='200' height='180' fill='%23141b24'/%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='%237b8aa3' text-anchor='middle' dy='.3em'%3E📚 Нет фото%3C/text%3E%3C/svg%3E" alt="Нет фото" />`;
-
-                    const emoji = categoryEmoji[task.category] || '📌';
-                    const name = categoryNames[task.category] || 'Другое';
-
+                    const imageHtml = task.image ? `<img src="${task.image}" alt="Фото" />` :
+                        `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='180' viewBox='0 0 200 180'%3E%3Crect width='200' height='180' fill='%23141b24'/%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='%237b8aa3' text-anchor='middle' dy='.3em'%3E📚 Нет фото%3C/text%3E%3C/svg%3E" alt="Нет фото" />`;
+                    const emoji = { 'study': '📚', 'help': '🤝', 'event': '🎉', 'secret': '🔒', 'shop': '🛍️', 'sport': '⚽',
+                        'tech': '💻', 'other': '📌' } [task.category] || '📌';
+                    const name = { 'study': 'Учёба', 'help': 'Помощь', 'event': 'Мероприятие', 'secret': 'Секретное',
+                        'shop': 'Покупки', 'sport': 'Спорт', 'tech': 'Техника', 'other': 'Другое' } [task.category] ||
+                        'Другое';
+                    const chatCount = privateChats[task.id] ? privateChats[task.id].length : 0;
                     card.innerHTML = `
                         ${imageHtml}
                         <h3>${escapeHtml(task.mainText) || 'Без заголовка'}</h3>
@@ -691,27 +1215,295 @@
                         <div class="task-meta">
                             <span>${emoji} ${name}</span>
                             <span>🕐 ${new Date(task.date).toLocaleDateString('ru-RU')}</span>
+                            <span>👤 ${escapeHtml(task.author || 'Аноним')}</span>
+                            ${chatCount > 0 ? `<span>💬 ${chatCount}</span>` : ''}
                         </div>
-                        <div class="category-badge" style="border-color: var(--accent); color: var(--accent);">
-                            ${emoji} ${name}
-                        </div>
+                        <div class="category-badge">${emoji} ${name}</div>
                     `;
-
                     card.addEventListener('click', () => openDetail(task.id));
                     feedContainer.appendChild(card);
                 });
             }
 
-            function updateTaskCount() {
-                taskCount.textContent = tasks.length;
+            function updateTaskCount() { taskCount.textContent = tasks.length; }
+
+            function updateChatBadge() {
+                let hasNew = false;
+                for (const taskId in privateChats) {
+                    const msgs = privateChats[taskId];
+                    if (msgs.length > 0 && msgs[msgs.length - 1].from !== userId && !msgs[msgs.length - 1].read) { hasNew =
+                        true; break; }
+                }
+                if (!hasNew) {
+                    for (const groupId in groupChats) {
+                        const msgs = groupChats[groupId].messages;
+                        if (msgs.length > 0 && msgs[msgs.length - 1].from !== userId && msgs[msgs.length - 1].from !==
+                            'system' && !msgs[msgs.length - 1].read) { hasNew = true; break; }
+                    }
+                }
+                chatBadge.style.display = hasNew ? 'block' : 'none';
             }
 
+            // --- РЕНДЕР КОНТАКТОВ ---
+            function renderContacts() {
+                if (!contactsContainer) return;
+                contactsContainer.innerHTML = '';
+                contacts.forEach(contact => {
+                    const div = document.createElement('div');
+                    div.className = 'contact-item';
+                    const avatarLetter = contact.name.charAt(0).toUpperCase();
+                    div.innerHTML = `
+                        <div class="contact-info">
+                            <div class="contact-avatar">${avatarLetter}</div>
+                            <div>
+                                <div class="contact-name">${escapeHtml(contact.name)}</div>
+                                <div class="contact-status">🟢 онлайн</div>
+                            </div>
+                        </div>
+                        <button class="invite-btn" data-contact-id="${contact.id}">💬 Чат</button>
+                    `;
+                    const chatBtn = div.querySelector('.invite-btn');
+                    chatBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const fakeTaskId = 'contact_' + contact.id;
+                        if (!privateChats[fakeTaskId]) privateChats[fakeTaskId] = [];
+                        openPrivateChat(fakeTaskId, contact.name);
+                    });
+                    contactsContainer.appendChild(div);
+                });
+            }
+
+            // --- РЕНДЕР ГРУППОВЫХ ЧАТОВ ---
+            function renderGroupChatsList() {
+                if (!groupChatsList) return;
+                groupChatsList.innerHTML = '';
+                const groupIds = Object.keys(groupChats);
+                if (groupIds.length === 0) {
+                    groupChatsList.innerHTML = '<div class="empty-state">Нет групповых чатов</div>';
+                    return;
+                }
+                groupIds.forEach(groupId => {
+                    const group = groupChats[groupId];
+                    const div = document.createElement('div');
+                    div.className = 'contact-item';
+                    const lastMsg = group.messages.length > 0 ? group.messages[group.messages.length - 1] : null;
+                    div.innerHTML = `
+                        <div class="contact-info">
+                            <div class="contact-avatar">👥</div>
+                            <div>
+                                <div class="contact-name">${escapeHtml(group.name)}</div>
+                                <div class="contact-status">${group.members.length} участников</div>
+                            </div>
+                        </div>
+                        <button class="invite-btn" data-group-id="${groupId}">💬 Открыть</button>
+                    `;
+                    const openBtn = div.querySelector('.invite-btn');
+                    openBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openGroupChat(groupId);
+                    });
+                    groupChatsList.appendChild(div);
+                });
+            }
+
+            // --- ОТКРЫТЬ ЛИЧНЫЙ ЧАТ ---
+            function openPrivateChat(chatId, partnerName) {
+                currentChatId = chatId;
+                currentGroupId = null;
+                chatPartnerName.textContent = partnerName || 'Собеседник';
+                chatSection.classList.add('active');
+                groupChatSection.classList.remove('active');
+                renderPrivateChatMessages(chatId);
+                chatInput.focus();
+                if (privateChats[chatId]) {
+                    privateChats[chatId].forEach(msg => { if (msg.from !== userId) msg.read = true; });
+                    savePrivateChats();
+                    updateChatBadge();
+                }
+            }
+
+            function renderPrivateChatMessages(chatId) {
+                if (!privateChats[chatId]) privateChats[chatId] = [];
+                chatMessages.innerHTML = '';
+                privateChats[chatId].forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-message';
+                    if (msg.from === userId) div.classList.add('own');
+                    const time = new Date(msg.time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                    div.innerHTML = `${escapeHtml(msg.text)} <span class="time">${time}</span>`;
+                    chatMessages.appendChild(div);
+                });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function sendPrivateMessage() {
+                const text = chatInput.value.trim();
+                if (!text || currentChatId === null) return;
+                if (!privateChats[currentChatId]) privateChats[currentChatId] = [];
+                privateChats[currentChatId].push({ text, time: Date.now(), from: userId, read: false });
+                savePrivateChats();
+                renderPrivateChatMessages(currentChatId);
+                chatInput.value = '';
+                updateChatBadge();
+            }
+
+            // --- ГРУППОВЫЕ ЧАТЫ ---
+            function openGroupChat(groupId) {
+                currentGroupId = groupId;
+                currentChatId = null;
+                const group = groupChats[groupId];
+                if (!group) return;
+                groupChatName.textContent = group.name;
+                groupChatSection.classList.add('active');
+                chatSection.classList.remove('active');
+                renderGroupChatMessages(groupId);
+                groupChatInput.focus();
+                group.messages.forEach(msg => { if (msg.from !== userId && msg.from !== 'system') msg.read = true; });
+                saveGroupChats();
+                updateChatBadge();
+            }
+
+            function renderGroupChatMessages(groupId) {
+                const group = groupChats[groupId];
+                if (!group) return;
+                groupChatMessages.innerHTML = '';
+                group.messages.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-message';
+                    if (msg.from === userId) div.classList.add('own');
+                    else if (msg.from === 'system') {
+                        div.style.background = 'var(--bg-secondary)';
+                        div.style.textAlign = 'center';
+                        div.style.fontStyle = 'italic';
+                    }
+                    const sender = msg.from === 'system' ? '' : (msg.from === userId ? 'Вы' : (contacts.find(c => c
+                        .id === msg.from)?.name || 'Контакт'));
+                    const time = new Date(msg.time).toLocaleTimeString('ru-RU', { hour: '2-digit',
+                    minute: '2-digit' });
+                    div.innerHTML = `${sender ? sender + ': ' : ''}${escapeHtml(msg.text)} <span class="time">${time}</span>`;
+                    groupChatMessages.appendChild(div);
+                });
+                groupChatMessages.scrollTop = groupChatMessages.scrollHeight;
+            }
+
+            function sendGroupMessage() {
+                const text = groupChatInput.value.trim();
+                if (!text || currentGroupId === null) return;
+                const group = groupChats[currentGroupId];
+                if (!group) return;
+                group.messages.push({ text, time: Date.now(), from: userId, read: false });
+                saveGroupChats();
+                renderGroupChatMessages(currentGroupId);
+                groupChatInput.value = '';
+                updateChatBadge();
+            }
+
+            // --- СОЗДАНИЕ ГРУППЫ (как в Telegram) ---
+            function openGroupCreateModal() {
+                selectedContacts = [];
+                groupCreateModal.classList.add('active');
+                renderContactsSelect();
+                updateSelectedMembers();
+                newGroupName.value = '';
+                createGroupBtn.disabled = true;
+                newGroupName.focus();
+            }
+
+            function closeGroupCreateModal() {
+                groupCreateModal.classList.remove('active');
+                selectedContacts = [];
+            }
+
+            function renderContactsSelect() {
+                contactsSelect.innerHTML = '';
+                contacts.forEach(contact => {
+                    const isSelected = selectedContacts.some(c => c.id === contact.id);
+                    const div = document.createElement('div');
+                    div.className = `contact-select-item ${isSelected ? 'selected' : ''}`;
+                    const avatarLetter = contact.name.charAt(0).toUpperCase();
+                    div.innerHTML = `
+                        <div class="checkbox"></div>
+                        <div class="contact-avatar">${avatarLetter}</div>
+                        <div>
+                            <div style="color: var(--text-secondary);">${escapeHtml(contact.name)}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">🟢 онлайн</div>
+                        </div>
+                    `;
+                    div.addEventListener('click', () => {
+                        const index = selectedContacts.findIndex(c => c.id === contact.id);
+                        if (index === -1) {
+                            selectedContacts.push(contact);
+                        } else {
+                            selectedContacts.splice(index, 1);
+                        }
+                        renderContactsSelect();
+                        updateSelectedMembers();
+                    });
+                    contactsSelect.appendChild(div);
+                });
+            }
+
+            function updateSelectedMembers() {
+                selectedMembers.innerHTML = '';
+                if (selectedContacts.length === 0) {
+                    selectedMembers.innerHTML =
+                        '<span style="color: var(--text-muted); font-size: 0.8rem;">Выберите участников...</span>';
+                    createGroupBtn.disabled = true;
+                    return;
+                }
+                selectedContacts.forEach(contact => {
+                    const span = document.createElement('span');
+                    span.className = 'selected-member';
+                    span.innerHTML = `
+                        ${escapeHtml(contact.name)}
+                        <span class="remove-member" data-id="${contact.id}">✕</span>
+                    `;
+                    const removeBtn = span.querySelector('.remove-member');
+                    removeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectedContacts = selectedContacts.filter(c => c.id !== contact.id);
+                        renderContactsSelect();
+                        updateSelectedMembers();
+                    });
+                    selectedMembers.appendChild(span);
+                });
+                createGroupBtn.disabled = false;
+            }
+
+            function createGroup() {
+                const name = newGroupName.value.trim() || 'Новая группа';
+                const groupId = 'group_' + Date.now();
+                const members = [userId, ...selectedContacts.map(c => c.id)];
+                groupChats[groupId] = {
+                    name: name,
+                    members: members,
+                    messages: [
+                        { text: `Группа "${name}" создана! Участников: ${members.length}`, time: Date.now(),
+                            from: 'system' }
+                    ]
+                };
+                saveGroupChats();
+                closeGroupCreateModal();
+                renderGroupChatsList();
+                showToast(`✅ Группа "${name}" создана!`);
+                openGroupChat(groupId);
+            }
+
+            // --- ЗАКРЫТЬ ЧАТЫ ---
+            function closeChat() {
+                chatSection.classList.remove('active');
+                groupChatSection.classList.remove('active');
+                currentChatId = null;
+                currentGroupId = null;
+            }
+
+            // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
             function openDetail(taskId) {
                 const task = tasks.find(t => t.id === taskId);
                 if (!task) return;
-
                 currentModalId = taskId;
-                modalImage.src = task.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220"%3E%3Crect width="400" height="220" fill="%23141b24"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%237b8aa3" text-anchor="middle" dy=".3em"%3E📚 Без фото%3C/text%3E%3C/svg%3E';
+                modalImage.src = task.image ||
+                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220"%3E%3Crect width="400" height="220" fill="%23141b24"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%237b8aa3" text-anchor="middle" dy=".3em"%3E📚 Без фото%3C/text%3E%3C/svg%3E';
                 modalMainText.textContent = task.mainText || 'Без названия';
                 modalDetailText.textContent = task.detailText || 'Подробное описание отсутствует.';
                 modalOverlay.classList.add('active');
@@ -725,43 +1517,51 @@
             }
 
             function switchTab(tab) {
+                closeChat();
                 if (tab === 'feed') {
                     feedContainer.style.display = 'flex';
-                    accountTab.classList.remove('active');
+                    accountTab.style.display = 'none';
+                    chatsTab.style.display = 'none';
                     navFeed.classList.add('active');
                     navAccount.classList.remove('active');
-                } else {
+                    navChats.classList.remove('active');
+                    renderFeed();
+                } else if (tab === 'account') {
                     feedContainer.style.display = 'none';
-                    accountTab.classList.add('active');
+                    accountTab.style.display = 'flex';
+                    chatsTab.style.display = 'none';
                     navAccount.classList.add('active');
                     navFeed.classList.remove('active');
+                    navChats.classList.remove('active');
+                } else if (tab === 'chats') {
+                    feedContainer.style.display = 'none';
+                    accountTab.style.display = 'none';
+                    chatsTab.style.display = 'block';
+                    navChats.classList.add('active');
+                    navFeed.classList.remove('active');
+                    navAccount.classList.remove('active');
+                    renderContacts();
+                    renderGroupChatsList();
                 }
             }
 
             function escapeHtml(unsafe) {
                 if (!unsafe) return '';
-                return unsafe
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
+                return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
                     .replace(/'/g, "&#039;");
             }
 
             function showToast(message) {
                 const existing = document.querySelector('.toast');
                 if (existing) existing.remove();
-                
                 const toast = document.createElement('div');
                 toast.className = 'toast';
                 toast.textContent = message;
                 document.body.appendChild(toast);
-                
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
+                setTimeout(() => toast.remove(), 3000);
             }
 
+            // --- ДОБАВЛЕНИЕ ЗАДАНИЯ ---
             function addTask(mainText, detailText, imageDataUrl, category) {
                 const newTask = {
                     id: Date.now(),
@@ -769,12 +1569,12 @@
                     mainText: mainText,
                     detailText: detailText || '',
                     category: category || 'other',
-                    date: new Date().toISOString()
+                    date: new Date().toISOString(),
+                    author: userName
                 };
                 tasks.push(newTask);
                 saveTasks();
-                renderFeed();
-                updateTaskCount();
+                updateUI();
                 createForm.reset();
                 switchTab('feed');
                 showToast('✅ Задание опубликовано!');
@@ -783,36 +1583,28 @@
             function deleteTask(taskId) {
                 if (confirm('🗑️ Удалить это задание?')) {
                     tasks = tasks.filter(t => t.id !== taskId);
+                    delete privateChats[taskId];
                     saveTasks();
-                    renderFeed();
-                    updateTaskCount();
+                    savePrivateChats();
+                    updateUI();
                     closeDetail();
                     showToast('🗑️ Задание удалено');
                 }
             }
 
+            // --- ОБРАБОТЧИКИ ---
             createForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-
                 const fileInput = document.getElementById('taskPhoto');
                 const mainText = document.getElementById('taskMainText').value.trim();
                 const detailText = document.getElementById('taskDetailText').value.trim();
                 const category = document.getElementById('taskCategory').value;
-
-                if (!mainText) {
-                    showToast('Пожалуйста, напишите, что нужно сделать.');
-                    return;
-                }
-
+                if (!mainText) { showToast('Напишите, что нужно сделать.'); return; }
                 const file = fileInput.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(ev) {
-                        addTask(mainText, detailText, ev.target.result, category);
-                    };
-                    reader.onerror = function() {
-                        addTask(mainText, detailText, '', category);
-                    };
+                    reader.onload = function(ev) { addTask(mainText, detailText, ev.target.result, category); };
+                    reader.onerror = function() { addTask(mainText, detailText, '', category); };
                     reader.readAsDataURL(file);
                 } else {
                     addTask(mainText, detailText, '', category);
@@ -821,31 +1613,53 @@
 
             modalRespondBtn.addEventListener('click', function() {
                 if (currentModalId) {
-                    showToast('📩 Отклик отправлен! С вами свяжутся.');
+                    const task = tasks.find(t => t.id === currentModalId);
+                    if (task) {
+                        const chatId = currentModalId;
+                        if (!privateChats[chatId]) privateChats[chatId] = [];
+                        openPrivateChat(chatId, task.author || 'Автор');
+                        closeDetail();
+                        showToast('💬 Чат открыт! Напишите сообщение.');
+                    }
                 }
-                closeDetail();
             });
 
-            modalDeleteBtn.addEventListener('click', function() {
-                if (currentModalId) {
-                    deleteTask(currentModalId);
-                }
-            });
-
+            modalDeleteBtn.addEventListener('click', function() { if (currentModalId) deleteTask(currentModalId); });
             modalCloseBtn.addEventListener('click', closeDetail);
-            modalOverlay.addEventListener('click', function(e) {
-                if (e.target === modalOverlay) closeDetail();
+            modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeDetail(); });
+
+            // Чат
+            chatSendBtn.addEventListener('click', sendPrivateMessage);
+            chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendPrivateMessage(); });
+            closeChatBtn.addEventListener('click', closeChat);
+
+            // Групповой чат
+            groupChatSendBtn.addEventListener('click', sendGroupMessage);
+            groupChatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendGroupMessage(); });
+            closeGroupChatBtn.addEventListener('click', closeChat);
+
+            // Создание группы (Telegram style)
+            showGroupCreateBtn.addEventListener('click', openGroupCreateModal);
+            closeGroupModal.addEventListener('click', closeGroupCreateModal);
+            groupCreateModal.addEventListener('click', function(e) {
+                if (e.target === groupCreateModal) closeGroupCreateModal();
+            });
+            createGroupBtn.addEventListener('click', createGroup);
+            newGroupName.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !createGroupBtn.disabled) createGroup();
             });
 
+            // Навигация
             navFeed.addEventListener('click', () => switchTab('feed'));
             navAccount.addEventListener('click', () => switchTab('account'));
+            navChats.addEventListener('click', () => switchTab('chats'));
 
-            loadTasks();
-            updateTaskCount();
+            // --- ЗАПУСК ---
+            loadData();
             switchTab('feed');
-
-            console.log('👻 Ghost v3 загружен!');
-            console.log('📋 Категории: Учёба, Помощь, Мероприятие, Секретное, Покупки, Спорт, Техника, Другое');
+            console.log('👻 Ghost v7 загружен!');
+            console.log('🆔 Ваш ID:', userId);
+            console.log('👤 Ваше имя:', userName);
         })();
     </script>
 
