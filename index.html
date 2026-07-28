@@ -19,10 +19,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 12px 10px 30px;
             color: #e6edf3;
             touch-action: manipulation;
+            overflow-x: hidden;
         }
         .app-wrapper {
             max-width: 480px;
@@ -32,6 +32,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
             padding: 16px 14px 28px;
             border: 1px solid #30363d;
+            position: relative;
         }
         .header {
             display: flex;
@@ -76,9 +77,9 @@
             font-size: 0.8rem;
             color: #e6edf3;
             cursor: pointer;
+            flex-shrink: 0;
         }
         .user-badge i { color: #238636; font-size: 0.9rem; }
-        .user-badge:hover { background: #1c2128; }
         .status-dot {
             display: inline-block;
             width: 8px;
@@ -89,122 +90,11 @@
         .status-dot.online { background: #238636; }
         .status-dot.offline { background: #da3633; }
 
-        /* ===== РЕГИСТРАЦИЯ ===== */
-        .register-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            padding: 20px;
-        }
-        .register-overlay.hidden {
-            display: none;
-        }
-        .register-box {
-            background: #161b22;
-            border-radius: 32px;
-            padding: 32px 28px 36px;
-            max-width: 380px;
-            width: 100%;
-            border: 1px solid #30363d;
-            box-shadow: 0 24px 48px rgba(0,0,0,0.6);
-        }
-        .register-box .logo-area {
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-        .register-box .logo-area .logo-icon {
-            width: 56px;
-            height: 56px;
-            font-size: 28px;
-        }
-        .register-box .logo-area .logo-text {
-            font-size: 1.6rem;
-        }
-        .register-title {
-            text-align: center;
-            font-size: 1.1rem;
-            color: #8b949e;
-            margin-bottom: 20px;
-        }
-        .register-input-group {
-            margin-bottom: 16px;
-        }
-        .register-input-group label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            color: #8b949e;
-            margin-bottom: 6px;
-        }
-        .register-input-group input {
-            width: 100%;
-            padding: 14px 18px;
-            border-radius: 16px;
-            border: 1px solid #30363d;
-            background: #0d1117;
-            color: #e6edf3;
-            font-size: 1.1rem;
-            outline: none;
-            transition: 0.2s;
-            text-align: center;
-        }
-        .register-input-group input:focus {
-            border-color: #238636;
-            box-shadow: 0 0 0 3px rgba(35, 134, 54, 0.15);
-        }
-        .register-input-group input::placeholder {
-            color: #8b949e;
-        }
-        .register-btn {
-            background: #238636;
-            border: none;
-            color: white;
-            padding: 16px;
-            border-radius: 16px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.15s;
-            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
-        }
-        .register-btn:active { transform: scale(0.96); }
-        .register-btn:disabled {
-            opacity: 0.5;
-            transform: none;
-            cursor: not-allowed;
-        }
-        .register-hint {
-            text-align: center;
-            font-size: 0.75rem;
-            color: #8b949e;
-            margin-top: 12px;
-        }
-        .register-hint i { color: #238636; margin-right: 4px; }
-
-        /* Основной интерфейс */
-        .main-content {
-            display: block;
-        }
-        .main-content.hidden {
-            display: none;
-        }
-
         .create-section {
             background: #0d1117;
             border-radius: 24px;
             padding: 16px 16px 20px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             border: 1px solid #30363d;
         }
         .create-title {
@@ -330,7 +220,22 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
+            max-height: 450px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
+        .tasks-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+        .tasks-grid::-webkit-scrollbar-track {
+            background: #0d1117;
+            border-radius: 10px;
+        }
+        .tasks-grid::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 10px;
+        }
+
         .task-card {
             background: #0d1117;
             border-radius: 20px;
@@ -339,6 +244,15 @@
             transition: 0.15s;
             display: flex;
             flex-direction: column;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .task-card.new-task {
+            border-color: #238636;
+            box-shadow: 0 0 20px rgba(35, 134, 54, 0.1);
         }
         .task-card:active { transform: scale(0.99); }
         .task-title {
@@ -421,16 +335,16 @@
             color: white;
         }
         .btn-action.take:active { background: #2ea043; }
-        .btn-action.done {
+        .btn-action.chat {
             background: #1f6feb;
             color: white;
         }
-        .btn-action.done:active { background: #388bfd; }
-        .btn-action.delete {
+        .btn-action.chat:active { background: #388bfd; }
+        .btn-action.done {
             background: #da3633;
             color: white;
         }
-        .btn-action.delete:active { background: #f85149; }
+        .btn-action.done:active { background: #f85149; }
 
         .empty-state {
             text-align: center;
@@ -448,30 +362,170 @@
             color: #238636;
         }
 
-        .footer-note {
-            margin-top: 24px;
-            font-size: 0.75rem;
-            color: #8b949e;
-            text-align: center;
-            border-top: 1px solid #30363d;
-            padding-top: 16px;
+        /* ===== ЧАТ ===== */
+        .chat-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            z-index: 9999;
+            padding: 16px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .chat-overlay.open {
             display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 8px;
         }
-        .footer-note i { margin-right: 3px; color: #238636; }
-        .loading-shimmer {
+        .chat-box {
+            background: #161b22;
+            border-radius: 28px 28px 24px 24px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #30363d;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0d1117;
+            flex-shrink: 0;
+        }
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-header-info i {
+            color: #238636;
+            font-size: 1.2rem;
+        }
+        .chat-header-info span {
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+        .chat-close {
+            background: none;
+            border: none;
             color: #8b949e;
-            text-align: center;
-            padding: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 8px;
         }
-        .loading-shimmer i {
-            animation: spin 1s linear infinite;
+        .chat-close:active { color: #f0f6fc; }
+        .chat-messages {
+            flex: 1;
+            padding: 16px 20px;
+            overflow-y: auto;
+            max-height: 50vh;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #0d1117;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 10px;
+        }
+        .chat-message {
+            padding: 10px 14px;
+            border-radius: 16px;
+            max-width: 85%;
+            word-break: break-word;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            animation: slideIn 0.2s ease;
+        }
+        .chat-message.self {
+            background: #238636;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-message.other {
+            background: #21262d;
+            color: #e6edf3;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-message .msg-author {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #8b949e;
+            margin-bottom: 2px;
+        }
+        .chat-message.self .msg-author {
+            color: rgba(255,255,255,0.7);
+        }
+        .chat-message .msg-time {
+            font-size: 0.6rem;
+            color: #8b949e;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
+        }
+        .chat-message.self .msg-time {
+            color: rgba(255,255,255,0.6);
+        }
+        .chat-input-area {
+            padding: 12px 16px 16px;
+            border-top: 1px solid #30363d;
+            display: flex;
+            gap: 10px;
+            background: #0d1117;
+            flex-shrink: 0;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid #30363d;
+            background: #161b22;
+            color: #e6edf3;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .chat-input-area input:focus {
+            border-color: #238636;
+        }
+        .chat-input-area input::placeholder {
+            color: #8b949e;
+        }
+        .chat-send-btn {
+            background: #238636;
+            border: none;
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: 0.15s;
+        }
+        .chat-send-btn:active { transform: scale(0.92); }
+        .chat-send-btn:disabled {
+            opacity: 0.5;
+            transform: none;
         }
 
         .toast {
@@ -496,24 +550,136 @@
         .toast.show { opacity: 1; }
         .toast.error { background: #da3633; }
 
+        .footer-note {
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #8b949e;
+            text-align: center;
+            border-top: 1px solid #30363d;
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .footer-note i { margin-right: 3px; color: #238636; }
+        .loading-shimmer {
+            color: #8b949e;
+            text-align: center;
+            padding: 20px;
+        }
+        .loading-shimmer i {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .register-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .register-overlay.hidden { display: none; }
+        .register-box {
+            background: #161b22;
+            border-radius: 32px;
+            padding: 32px 28px 36px;
+            max-width: 380px;
+            width: 100%;
+            border: 1px solid #30363d;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+        }
+        .register-box .logo-area { justify-content: center; margin-bottom: 24px; }
+        .register-box .logo-area .logo-icon { width: 56px; height: 56px; font-size: 28px; }
+        .register-box .logo-area .logo-text { font-size: 1.6rem; }
+        .register-title { text-align: center; font-size: 1.1rem; color: #8b949e; margin-bottom: 20px; }
+        .register-input-group { margin-bottom: 16px; }
+        .register-input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #8b949e;
+            margin-bottom: 6px;
+        }
+        .register-input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #e6edf3;
+            font-size: 1.1rem;
+            outline: none;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .register-input-group input:focus {
+            border-color: #238636;
+            box-shadow: 0 0 0 3px rgba(35, 134, 54, 0.15);
+        }
+        .register-input-group input::placeholder { color: #8b949e; }
+        .register-btn {
+            background: #238636;
+            border: none;
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
+        }
+        .register-btn:active { transform: scale(0.96); }
+        .register-btn:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+        .register-hint { text-align: center; font-size: 0.75rem; color: #8b949e; margin-top: 12px; }
+        .register-hint i { color: #238636; margin-right: 4px; }
+
+        .main-content.hidden { display: none; }
+
         @media (max-width: 400px) {
             .app-wrapper { padding: 12px 10px 20px; }
             .task-actions { gap: 6px; }
             .btn-action { padding: 8px 14px; font-size: 0.75rem; min-width: 60px; }
             .register-box { padding: 24px 20px 28px; }
+            .chat-box { border-radius: 20px 20px 16px 16px; }
         }
         @media (hover: none) {
             .task-card:hover { transform: none; }
             .btn-action:hover { background: inherit; }
             .btn-action.take:hover { background: #238636; }
-            .btn-action.done:hover { background: #1f6feb; }
-            .btn-action.delete:hover { background: #da3633; }
+            .btn-action.chat:hover { background: #1f6feb; }
+            .btn-action.done:hover { background: #da3633; }
+        }
+
+        .notification-badge {
+            background: #da3633;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 4px;
         }
     </style>
 </head>
 <body>
 
-<!-- ===== РЕГИСТРАЦИЯ ===== -->
+<!-- РЕГИСТРАЦИЯ -->
 <div class="register-overlay" id="registerOverlay">
     <div class="register-box">
         <div class="logo-area">
@@ -522,17 +688,15 @@
         </div>
         <div class="register-title">👋 Добро пожаловать!</div>
         <div class="register-input-group">
-            <label for="nameInput"><i class="fas fa-user"></i> Ваше имя</label>
+            <label><i class="fas fa-user"></i> Ваше имя</label>
             <input type="text" id="nameInput" placeholder="Например: Алексей" maxlength="30" autofocus>
         </div>
         <button class="register-btn" id="registerBtn"><i class="fas fa-arrow-right"></i> Войти</button>
-        <div class="register-hint">
-            <i class="fas fa-info-circle"></i> Имя будет видно другим пользователям
-        </div>
+        <div class="register-hint"><i class="fas fa-info-circle"></i> Имя будет видно другим</div>
     </div>
 </div>
 
-<!-- ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== -->
+<!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
 <div class="app-wrapper main-content hidden" id="mainContent">
     <div class="header">
         <div class="logo-area">
@@ -547,9 +711,7 @@
     </div>
 
     <div class="create-section">
-        <div class="create-title">
-            <i class="fas fa-plus-circle"></i> Создать задание
-        </div>
+        <div class="create-title"><i class="fas fa-plus-circle"></i> Создать задание</div>
         <div class="create-grid">
             <div class="create-input-group">
                 <label for="taskTitleInput"><i class="far fa-file-alt"></i> Название *</label>
@@ -561,9 +723,7 @@
             </div>
             <button class="create-btn" id="addTaskBtn"><i class="fas fa-plus"></i> Добавить</button>
         </div>
-        <div class="remote-badge">
-            <i class="fas fa-globe-americas"></i> Облачная синхронизация
-        </div>
+        <div class="remote-badge"><i class="fas fa-globe-americas"></i> Облачная синхронизация</div>
     </div>
 
     <div class="list-header">
@@ -572,9 +732,7 @@
     </div>
 
     <div class="tasks-grid" id="tasksContainer">
-        <div class="loading-shimmer">
-            <i class="fas fa-spinner"></i> Загрузка...
-        </div>
+        <div class="loading-shimmer"><i class="fas fa-spinner"></i> Загрузка...</div>
     </div>
 
     <div class="footer-note">
@@ -584,73 +742,61 @@
     </div>
 </div>
 
+<!-- ЧАТ -->
+<div class="chat-overlay" id="chatOverlay">
+    <div class="chat-box">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <i class="fas fa-comment-dots"></i>
+                <span id="chatTitle">Чат</span>
+            </div>
+            <button class="chat-close" id="chatClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Напишите сообщение..." maxlength="500">
+            <button class="chat-send-btn" id="chatSendBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     (function() {
-        // ===== ВАШИ ДАННЫЕ ИЗ SUPABASE =====
+        // ===== ДАННЫЕ SUPABASE =====
         const SUPABASE_URL = 'https://bzntjichpncyswskbetz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6bnRqaWNocG5jeXN3c2tiZXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNjcxMzAsImV4cCI6MjEwMDg0MzEzMH0.cs9fotOCspkvmRgvksTYToaF9vhuo6eqYqL_XPjIdgI';
-        // ===================================
+        // ===========================
 
         let supabase = null;
         let isConfigured = false;
         let currentUser = '';
-        const tableName = 'tasks';
+        let tasks = [];
+        let chatTaskId = null;
+        let chatAuthor = '';
+        let chatTaskTitle = '';
+        let chatMessages = [];
+        let notificationCount = 0;
+        let lastTaskCount = 0;
 
-        // === Управление регистрацией ===
+        // Элементы
         const registerOverlay = document.getElementById('registerOverlay');
         const mainContent = document.getElementById('mainContent');
         const nameInput = document.getElementById('nameInput');
         const registerBtn = document.getElementById('registerBtn');
         const userNameDisplay = document.getElementById('userName');
+        const tasksContainer = document.getElementById('tasksContainer');
+        const taskCountDisplay = document.getElementById('taskCount');
+        const chatOverlay = document.getElementById('chatOverlay');
+        const chatMessagesEl = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const chatSendBtn = document.getElementById('chatSendBtn');
+        const chatTitle = document.getElementById('chatTitle');
+        const chatClose = document.getElementById('chatClose');
 
-        // Проверяем, есть ли сохранённое имя
-        const savedName = localStorage.getItem('task_user_name');
-        if (savedName) {
-            currentUser = savedName;
-            registerOverlay.classList.add('hidden');
-            mainContent.classList.remove('hidden');
-            userNameDisplay.textContent = currentUser;
-            initApp();
-        }
-
-        // Регистрация
-        registerBtn.addEventListener('click', function() {
-            const name = nameInput.value.trim();
-            if (name.length < 2) {
-                showToast('⚠️ Введите имя (минимум 2 символа)', true);
-                nameInput.focus();
-                return;
-            }
-            if (name.length > 30) {
-                showToast('⚠️ Имя не должно превышать 30 символов', true);
-                return;
-            }
-            currentUser = name;
-            localStorage.setItem('task_user_name', name);
-            registerOverlay.classList.add('hidden');
-            mainContent.classList.remove('hidden');
-            userNameDisplay.textContent = currentUser;
-            showToast(`👋 Добро пожаловать, ${currentUser}!`);
-            initApp();
-        });
-
-        // Enter на поле имени
-        nameInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                registerBtn.click();
-            }
-        });
-
-        // Фокус на поле при загрузке
-        if (!savedName) {
-            setTimeout(() => nameInput.focus(), 300);
-        }
-
-        // === ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ ===
+        // Toast
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -663,12 +809,183 @@
             }, 3000);
         }
 
+        // ===== РЕГИСТРАЦИЯ =====
+        const savedName = localStorage.getItem('task_user_name');
+        if (savedName) {
+            currentUser = savedName;
+            registerOverlay.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            userNameDisplay.textContent = currentUser;
+            initApp();
+        }
+
+        registerBtn.addEventListener('click', function() {
+            const name = nameInput.value.trim();
+            if (name.length < 2) {
+                showToast('⚠️ Введите имя (минимум 2 символа)', true);
+                nameInput.focus();
+                return;
+            }
+            currentUser = name;
+            localStorage.setItem('task_user_name', name);
+            registerOverlay.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            userNameDisplay.textContent = currentUser;
+            showToast(`👋 Добро пожаловать, ${currentUser}!`);
+            initApp();
+        });
+
+        nameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); registerBtn.click(); }
+        });
+        if (!savedName) setTimeout(() => nameInput.focus(), 300);
+
+        // ===== ЧАТ =====
+        function openChat(taskId, author, title) {
+            chatTaskId = taskId;
+            chatAuthor = author;
+            chatTaskTitle = title;
+            chatTitle.textContent = `💬 ${title}`;
+            chatMessages = [];
+            chatMessagesEl.innerHTML = '';
+            chatOverlay.classList.add('open');
+            // Загружаем сообщения чата
+            loadChatMessages(taskId);
+            setTimeout(() => chatInput.focus(), 300);
+        }
+
+        function closeChat() {
+            chatOverlay.classList.remove('open');
+            chatTaskId = null;
+        }
+
+        chatClose.addEventListener('click', closeChat);
+        chatOverlay.addEventListener('click', function(e) {
+            if (e.target === chatOverlay) closeChat();
+        });
+
+        async function loadChatMessages(taskId) {
+            if (!isConfigured) {
+                // Локальный режим — просто показываем заглушку
+                chatMessagesEl.innerHTML = `
+                    <div style="text-align:center;color:#8b949e;padding:20px;font-size:0.9rem;">
+                        <i class="fas fa-wifi" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>
+                        Офлайн-режим. Чат будет доступен при подключении к интернету.
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('chat_messages')
+                    .select('*')
+                    .eq('task_id', taskId)
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+                chatMessages = data || [];
+                renderChatMessages();
+            } catch (e) {
+                console.error('Ошибка загрузки чата:', e);
+                chatMessagesEl.innerHTML = `
+                    <div style="text-align:center;color:#8b949e;padding:20px;font-size:0.9rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>
+                        Ошибка загрузки чата
+                    </div>
+                `;
+            }
+        }
+
+        function renderChatMessages() {
+            if (!chatMessagesEl) return;
+            if (chatMessages.length === 0) {
+                chatMessagesEl.innerHTML = `
+                    <div style="text-align:center;color:#8b949e;padding:20px;font-size:0.9rem;">
+                        <i class="fas fa-comment" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>
+                        Напишите первое сообщение!
+                    </div>
+                `;
+                return;
+            }
+
+            chatMessagesEl.innerHTML = chatMessages.map(msg => {
+                const isSelf = msg.author === currentUser;
+                return `
+                    <div class="chat-message ${isSelf ? 'self' : 'other'}">
+                        <div class="msg-author">${escapeHtml(msg.author)}</div>
+                        ${escapeHtml(msg.message)}
+                        <span class="msg-time">${formatTime(msg.created_at)}</span>
+                    </div>
+                `;
+            }).join('');
+            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+        }
+
+        async function sendChatMessage() {
+            const text = chatInput.value.trim();
+            if (!text || !chatTaskId) return;
+            if (!isConfigured) {
+                showToast('❌ Нет подключения к облаку', true);
+                return;
+            }
+
+            chatInput.value = '';
+            chatSendBtn.disabled = true;
+
+            try {
+                const { data, error } = await supabase
+                    .from('chat_messages')
+                    .insert([{
+                        task_id: chatTaskId,
+                        author: currentUser,
+                        message: text
+                    }])
+                    .select();
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    chatMessages.push(data[0]);
+                    renderChatMessages();
+                    showToast('✅ Сообщение отправлено');
+                }
+            } catch (e) {
+                console.error('Ошибка отправки:', e);
+                showToast('❌ Ошибка отправки', true);
+                chatInput.value = text;
+            } finally {
+                chatSendBtn.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        chatSendBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+
+        function formatTime(date) {
+            if (!date) return '';
+            const d = new Date(date);
+            return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ===== ОСНОВНЫЕ ФУНКЦИИ =====
+
         function initApp() {
             try {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 isConfigured = true;
                 document.getElementById('statusDot').className = 'status-dot online';
                 loadTasks();
+                // Автообновление каждые 3 секунды
+                setInterval(() => {
+                    if (isConfigured) loadTasks();
+                }, 3000);
             } catch (e) {
                 console.error('Ошибка инициализации:', e);
                 document.getElementById('statusDot').className = 'status-dot offline';
@@ -676,16 +993,11 @@
                 loadTasks();
             }
 
-            // Обработчики
             document.getElementById('addTaskBtn').addEventListener('click', addTask);
             document.getElementById('taskTitleInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addTask();
-                }
+                if (e.key === 'Enter') { e.preventDefault(); addTask(); }
             });
 
-            // Клик по имени пользователя — смена имени
             document.getElementById('userBadge').addEventListener('click', function() {
                 const newName = prompt('Введите новое имя:', currentUser);
                 if (newName && newName.trim().length >= 2) {
@@ -693,7 +1005,7 @@
                     localStorage.setItem('task_user_name', currentUser);
                     userNameDisplay.textContent = currentUser;
                     showToast(`✅ Имя изменено на ${currentUser}`);
-                    renderTasks(); // обновляем список
+                    renderTasks();
                 } else if (newName !== null) {
                     showToast('⚠️ Имя должно быть не менее 2 символов', true);
                 }
@@ -704,30 +1016,44 @@
                     document.activeElement?.blur();
                 }
             }, { passive: true });
+
+            // Подписка на новые сообщения в чате
+            if (isConfigured) {
+                supabase
+                    .channel('chat_updates')
+                    .on('postgres_changes', {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'chat_messages',
+                        filter: `task_id=eq.${chatTaskId || 0}`
+                    }, (payload) => {
+                        if (chatTaskId && payload.new.task_id === chatTaskId) {
+                            chatMessages.push(payload.new);
+                            renderChatMessages();
+                            if (payload.new.author !== currentUser) {
+                                showToast(`💬 Новое сообщение от ${payload.new.author}`);
+                            }
+                        }
+                    })
+                    .subscribe();
+            }
         }
 
         const STORAGE_KEY = 'mobile_board_tasks_cloud';
-        let tasks = [];
 
         async function loadTasks() {
-            const container = document.getElementById('tasksContainer');
-            
             if (!isConfigured) {
                 const stored = localStorage.getItem(STORAGE_KEY);
                 if (stored) {
-                    try {
-                        tasks = JSON.parse(stored);
-                    } catch (e) {}
+                    try { tasks = JSON.parse(stored); } catch (e) {}
                 }
                 renderTasks();
                 return;
             }
 
             try {
-                container.innerHTML = `<div class="loading-shimmer"><i class="fas fa-spinner"></i> Загрузка...</div>`;
-                
                 const { data, error } = await supabase
-                    .from(tableName)
+                    .from('tasks')
                     .select('*')
                     .order('created_at', { ascending: false });
 
@@ -737,25 +1063,25 @@
                         showToast('❌ Таблица не найдена! Создайте в Supabase', true);
                     } else if (error.code === '42501') {
                         showToast('❌ Нет прав! Создайте политики в Supabase', true);
-                    } else {
-                        showToast('❌ Ошибка загрузки: ' + error.message, true);
                     }
                     isConfigured = false;
                     document.getElementById('statusDot').className = 'status-dot offline';
                     const stored = localStorage.getItem(STORAGE_KEY);
                     if (stored) {
-                        try {
-                            tasks = JSON.parse(stored);
-                        } catch (e) {}
+                        try { tasks = JSON.parse(stored); } catch (e) {}
                     }
                     renderTasks();
                     return;
                 }
 
+                const oldCount = tasks.length;
                 tasks = data || [];
                 renderTasks();
-                if (tasks.length > 0) {
-                    showToast(`📋 Загружено ${tasks.length} заданий`);
+
+                // Если появились новые задания — уведомление
+                if (tasks.length > oldCount && oldCount > 0) {
+                    const newTask = tasks[0];
+                    showToast(`📢 Новое задание: "${newTask.title}" от ${newTask.author}`);
                 }
             } catch (e) {
                 console.error('Ошибка:', e);
@@ -784,7 +1110,7 @@
 
             try {
                 const { data, error } = await supabase
-                    .from(tableName)
+                    .from('tasks')
                     .insert([{
                         title: title,
                         description: description || 'Без описания',
@@ -795,26 +1121,20 @@
 
                 if (error) {
                     console.error('Ошибка добавления:', error);
-                    if (error.code === '42501') {
-                        showToast('❌ Нет прав на добавление!', true);
-                    } else {
-                        showToast('❌ Ошибка: ' + error.message, true);
-                    }
                     isConfigured = false;
                     document.getElementById('statusDot').className = 'status-dot offline';
                     return addTaskToCloud(title, description);
                 }
-                
+
                 if (data && data.length > 0) {
                     tasks.unshift(data[0]);
                     renderTasks();
-                    showToast('✅ Задание добавлено в облако!');
+                    showToast('✅ Задание добавлено!');
                     return true;
                 }
                 return false;
             } catch (e) {
                 console.error('Ошибка:', e);
-                showToast('⚠️ Ошибка, сохраняем локально', true);
                 isConfigured = false;
                 document.getElementById('statusDot').className = 'status-dot offline';
                 return addTaskToCloud(title, description);
@@ -834,17 +1154,15 @@
 
             try {
                 const { error } = await supabase
-                    .from(tableName)
+                    .from('tasks')
                     .update(updates)
                     .eq('id', taskId);
-
                 if (error) throw error;
-                
+
                 const task = tasks.find(t => String(t.id) === String(taskId));
                 if (task) {
                     Object.assign(task, updates);
                     renderTasks();
-                    showToast('✅ Задание обновлено');
                 }
             } catch (e) {
                 console.error('Ошибка обновления:', e);
@@ -863,12 +1181,11 @@
 
             try {
                 const { error } = await supabase
-                    .from(tableName)
+                    .from('tasks')
                     .delete()
                     .eq('id', taskId);
-
                 if (error) throw error;
-                
+
                 tasks = tasks.filter(t => String(t.id) !== String(taskId));
                 renderTasks();
                 showToast('🗑️ Задание удалено');
@@ -879,13 +1196,11 @@
         }
 
         function renderTasks() {
-            const container = document.getElementById('tasksContainer');
-            if (!container) return;
-
-            document.getElementById('taskCount').textContent = tasks.length;
+            if (!tasksContainer) return;
+            taskCountDisplay.textContent = tasks.length;
 
             if (tasks.length === 0) {
-                container.innerHTML = `
+                tasksContainer.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         Нет заданий<br>
@@ -895,15 +1210,17 @@
                 return;
             }
 
-            container.innerHTML = tasks.map(task => {
-                const statusLabel = task.taken ? 
-                    '<span class="task-status taken"><i class="fas fa-user-check"></i> В работе</span>' : 
+            tasksContainer.innerHTML = tasks.map((task, index) => {
+                const statusLabel = task.taken ?
+                    '<span class="task-status taken"><i class="fas fa-user-check"></i> В работе</span>' :
                     '<span class="task-status"><i class="fas fa-clock"></i> Свободно</span>';
 
                 const isAuthor = task.author === currentUser;
+                const isNew = index === 0 && tasks.length > 1;
+                const newClass = isNew ? 'new-task' : '';
 
                 return `
-                    <div class="task-card" data-id="${task.id}">
+                    <div class="task-card ${newClass}" data-id="${task.id}">
                         <div class="task-title">${escapeHtml(task.title)}</div>
                         <div class="task-desc">${escapeHtml(task.description || 'Без описания')}</div>
                         <div class="task-meta">
@@ -911,14 +1228,16 @@
                             ${statusLabel}
                         </div>
                         <div class="task-actions">
-                            ${!task.taken ? `<button class="btn-action take" data-id="${task.id}"><i class="fas fa-hand-holding-heart"></i> Взять</button>` : ''}
-                            ${isAuthor ? `<button class="btn-action done" data-id="${task.id}"><i class="fas fa-check"></i> Выполнено</button>` : ''}
+                            ${!task.taken && !isAuthor ? `<button class="btn-action take" data-id="${task.id}"><i class="fas fa-hand-holding-heart"></i> Взять</button>` : ''}
+                            ${task.taken ? `<button class="btn-action chat" data-id="${task.id}" data-author="${escapeHtml(task.author)}" data-title="${escapeHtml(task.title)}"><i class="fas fa-comment"></i> Чат</button>` : ''}
+                            ${isAuthor && !task.taken ? `<button class="btn-action done" data-id="${task.id}"><i class="fas fa-check"></i> Выполнено</button>` : ''}
                             ${isAuthor ? `<button class="btn-action delete" data-id="${task.id}"><i class="fas fa-trash-alt"></i></button>` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
 
+            // Обработчики
             document.querySelectorAll('.task-actions .take').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -926,7 +1245,19 @@
                     if (confirm('Взять это задание?')) {
                         updateTaskInCloud(id, { taken: true });
                         if (navigator.vibrate) navigator.vibrate(20);
+                        showToast('✅ Задание взято! Откройте чат для связи.');
                     }
+                });
+            });
+
+            document.querySelectorAll('.task-actions .chat').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = this.getAttribute('data-id');
+                    const author = this.getAttribute('data-author');
+                    const title = this.getAttribute('data-title');
+                    openChat(id, author, title);
+                    if (navigator.vibrate) navigator.vibrate(10);
                 });
             });
 
@@ -978,16 +1309,48 @@
 
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-plus"></i> Добавить';
-            
+
             if (success) {
                 titleInput.value = '';
                 descInput.value = '';
                 titleInput.blur();
                 descInput.blur();
                 if (navigator.vibrate) navigator.vibrate(15);
-                document.getElementById('tasksContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                tasksContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
+
+        // Создаём таблицу чата, если её нет
+        async function ensureChatTable() {
+            if (!isConfigured) return;
+            try {
+                const { error } = await supabase
+                    .from('chat_messages')
+                    .select('id')
+                    .limit(1);
+                if (error && error.code === '42P01') {
+                    // Таблицы нет — создаём
+                    await supabase.rpc('exec_sql', {
+                        sql: `
+                            CREATE TABLE IF NOT EXISTS chat_messages (
+                                id BIGSERIAL PRIMARY KEY,
+                                task_id BIGINT NOT NULL,
+                                author TEXT NOT NULL,
+                                message TEXT NOT NULL,
+                                created_at TIMESTAMPTZ DEFAULT NOW()
+                            );
+                            ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+                            CREATE POLICY "Всё разрешено" ON chat_messages FOR ALL USING (true) WITH CHECK (true);
+                        `
+                    });
+                }
+            } catch (e) {
+                console.warn('⚠️ Ошибка создания таблицы чата:', e);
+            }
+        }
+
+        // Запускаем создание таблицы чата
+        setTimeout(ensureChatTable, 1000);
     })();
 </script>
 </body>
