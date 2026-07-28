@@ -79,12 +79,9 @@
 </div>
 
 <script>
-    // Настройки формы и вашей Google-таблицы
     const FORM_URL = "https://google.com";
     const FIELDS = ["entry.1746401037", "entry.1508215891", "entry.724816159"];
-    const SPREADSHEET_ID = "1MkTPP2d3ZNSiT6Kw4KrMeyKPDVAxstK97RzTroa9K4k"; 
 
-    // Функция переключения вкладок
     function switchTab(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -98,38 +95,28 @@
         }
     }
 
-    // Парсер CSV формата
     function parseCSV(text) {
-        let lines = [];
-        let row = [""];
-        let inQuotes = false;
-
+        let lines = []; let row = [""]; let inQuotes = false;
         for (let i = 0; i < text.length; i++) {
-            let c = text[i];
-            let next = text[i+1];
-
+            let c = text[i]; let next = text[i+1];
             if (c === '"') {
                 if (inQuotes && next === '"') { row[row.length - 1] += '"'; i++; }
                 else { inQuotes = !inQuotes; }
-            } else if (c === ',' && !inQuotes) {
-                row.push('');
-            } else if ((c === '\r' || c === '\n') && !inQuotes) {
+            } else if (c === ',' && !inQuotes) { row.push(''); }
+            else if ((c === '\r' || c === '\n') && !inQuotes) {
                 if (c === '\r' && next === '\n') { i++; }
-                lines.push(row);
-                row = [''];
-            } else {
-                row[row.length - 1] += c;
-            }
+                lines.push(row); row = [''];
+            } else { row[row.length - 1] += c; }
         }
-        if (row.length > 1 || row[0] !== '') lines.push(row);
+        if (row.length > 1 || row !== '') lines.push(row);
         return lines;
     }
 
-    // Загрузка настоящих данных через стабильный домен Google Spreadsheets
     function loadTasks() {
         const list = document.getElementById('taskList');
-        // Исправлен URL и заменен домен на альтернативный для стабильного обхода блокировок DNS в РФ
-        const csvUrl = `https://google.com{SPREADSHEET_ID}/pub?output=csv`;
+        
+        // Ссылка заменена на полностью готовую прямую текстовую ссылку без переменных
+        const csvUrl = "https://google.com";
 
         fetch(csvUrl)
         .then(res => {
@@ -138,8 +125,6 @@
         })
         .then(text => {
             const rows = parseCSV(text);
-            
-            // Если в таблице только шапка (меньше или равно 1 строки)
             if (!rows || rows.length <= 1) {
                 list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Нет активных контрактов.</p>";
                 return;
@@ -147,7 +132,6 @@
 
             list.innerHTML = "";
 
-            // Выводим строки снизу вверх (от новых к старым), исключая заголовок (индекс 0)
             for (let i = rows.length - 1; i >= 1; i--) {
                 const cells = rows[i];
                 if (!cells || cells.length < 4) continue;
@@ -170,11 +154,10 @@
         })
         .catch((err) => {
             console.error(err);
-            list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Ошибка доступа к базе данных контрактов. Обновите страницу.</p>";
+            list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Ошибка доступа к базе данных контрактов. Обновите кэш страницы (Ctrl+F5).</p>";
         });
     }
 
-    // Обработка отправки формы создания
     document.getElementById('ghostForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = e.target.querySelector('button');
@@ -209,7 +192,6 @@
         return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // Автоматическая загрузка ленты при открытии сайта
     loadTasks();
 </script>
 
