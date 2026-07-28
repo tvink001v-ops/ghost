@@ -423,6 +423,7 @@
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0 8px;
+            z-index: 10;
         }
         .chat-close:active { color: #f0f6fc; }
         .chat-messages {
@@ -523,6 +524,7 @@
             justify-content: center;
             flex-shrink: 0;
             transition: 0.15s;
+            z-index: 10;
         }
         .chat-send-btn:active { transform: scale(0.92); }
         .chat-send-btn:disabled {
@@ -745,7 +747,7 @@
 
 <!-- ЧАТ -->
 <div class="chat-overlay" id="chatOverlay">
-    <div class="chat-box">
+    <div class="chat-box" id="chatBox">
         <div class="chat-header">
             <div class="chat-header-info">
                 <i class="fas fa-comment-dots"></i>
@@ -755,7 +757,7 @@
             <button class="chat-close" id="chatClose"><i class="fas fa-times"></i></button>
         </div>
         <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-area">
+        <div class="chat-input-area" id="chatInputArea">
             <input type="text" id="chatInput" placeholder="Напишите сообщение..." maxlength="500">
             <button class="chat-send-btn" id="chatSendBtn"><i class="fas fa-paper-plane"></i></button>
         </div>
@@ -790,6 +792,7 @@
         const tasksContainer = document.getElementById('tasksContainer');
         const taskCountDisplay = document.getElementById('taskCount');
         const chatOverlay = document.getElementById('chatOverlay');
+        const chatBox = document.getElementById('chatBox');
         const chatMessagesEl = document.getElementById('chatMessages');
         const chatInput = document.getElementById('chatInput');
         const chatSendBtn = document.getElementById('chatSendBtn');
@@ -887,7 +890,7 @@
                 if (chatTaskId && chatOverlay.classList.contains('open')) {
                     refreshChatMessages();
                 }
-            }, 2000); // каждые 2 секунды
+            }, 2000);
         }
 
         function stopChatAutoUpdate() {
@@ -909,20 +912,16 @@
 
                 if (error) throw error;
 
-                if (data) {
-                    // Проверяем, появились ли новые сообщения
-                    if (data.length !== chatMessages.length) {
-                        chatMessages = data;
-                        renderChatMessages();
-                        // Если новые сообщения не от нас — уведомление
-                        if (data.length > 0) {
-                            const lastMsg = data[data.length - 1];
-                            if (lastMsg.author !== currentUser) {
-                                const oldLast = chatMessages[chatMessages.length - 2];
-                                if (!oldLast || oldLast.id !== lastMsg.id) {
-                                    showToast(`💬 ${lastMsg.author}: ${lastMsg.message.substring(0, 30)}...`);
-                                    if (navigator.vibrate) navigator.vibrate(50);
-                                }
+                if (data && data.length !== chatMessages.length) {
+                    chatMessages = data;
+                    renderChatMessages();
+                    if (data.length > 0) {
+                        const lastMsg = data[data.length - 1];
+                        if (lastMsg.author !== currentUser) {
+                            const oldLast = chatMessages[chatMessages.length - 2];
+                            if (!oldLast || oldLast.id !== lastMsg.id) {
+                                showToast(`💬 ${lastMsg.author}: ${lastMsg.message.substring(0, 30)}...`);
+                                if (navigator.vibrate) navigator.vibrate(50);
                             }
                         }
                     }
@@ -983,7 +982,7 @@
             
             subscribeToChat(taskId);
             loadChatMessages(taskId);
-            startChatAutoUpdate(); // Запускаем автообновление
+            startChatAutoUpdate();
             
             setTimeout(() => chatInput.focus(), 300);
         }
@@ -993,15 +992,27 @@
                 supabase.removeChannel(chatChannel);
                 chatChannel = null;
             }
-            stopChatAutoUpdate(); // Останавливаем автообновление
+            stopChatAutoUpdate();
             chatOverlay.classList.remove('open');
             chatTaskId = null;
             chatMessages = [];
         }
 
-        chatClose.addEventListener('click', closeChat);
+        chatClose.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeChat();
+        });
+
+        // Закрытие по клику на фон
         chatOverlay.addEventListener('click', function(e) {
-            if (e.target === chatOverlay) closeChat();
+            if (e.target === chatOverlay) {
+                closeChat();
+            }
+        });
+
+        // Блокируем всплытие кликов внутри чата
+        chatBox.addEventListener('click', function(e) {
+            e.stopPropagation();
         });
 
         async function loadChatMessages(taskId) {
@@ -1124,10 +1135,15 @@
             }
         }
 
-        chatSendBtn.addEventListener('click', sendChatMessage);
+        chatSendBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sendChatMessage();
+        });
+
         chatInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
+                e.stopPropagation();
                 sendChatMessage();
             }
         });
@@ -1154,7 +1170,6 @@
                 ensureChatTable();
                 loadTasks();
                 
-                // Автообновление заданий каждые 3 секунды
                 setInterval(() => {
                     if (isConfigured) loadTasks();
                 }, 3000);
@@ -1388,7 +1403,6 @@
                 `;
             }).join('');
 
-            // Обработчики
             document.querySelectorAll('.task-actions .take').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
