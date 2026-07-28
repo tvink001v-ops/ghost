@@ -81,9 +81,7 @@
 <script>
     const FORM_URL = "https://google.com";
     const FIELDS = ["entry.1746401037", "entry.1508215891", "entry.724816159"];
-
     const SPREADSHEET_ID = "1MkTPP2d3ZNSiT6Kw4KrMeyKPDVAxstK97RzTroa9K4k"; 
-    const DATA_URL = `https://google.com{SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Ответы на форму (1)`;
 
     function switchTab(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -98,10 +96,12 @@
         }
     }
 
+    // Универсальный метод загрузки первой вкладки без привязки к имени листа
     function loadTasks() {
         const list = document.getElementById('taskList');
         
-        fetch(DATA_URL)
+        // Убираем параметр &sheet, чтобы Google автоматически отдал данные первой вкладки (gid=0)
+        fetch(`https://google.com{SPREADSHEET_ID}/gviz/tq?tqx=out:json`)
         .then(res => res.text())
         .then(txt => {
             const startPos = txt.indexOf('{');
@@ -118,19 +118,16 @@
             
             list.innerHTML = "";
             
-            // Защищенный перебор строк таблицы
+            // Вывод от новых к старым (пропуская шапку таблицы i=0)
             for (let i = rows.length - 1; i >= 1; i--) {
                 const cells = rows[i].c;
                 if (!cells) continue;
 
-                // Безопасное извлечение текста с дефолтными значениями
+                // Безопасное извлечение ячеек с проверкой на null
                 const time = cells[0] && cells[0].f ? cells[0].f : "Недавно";
                 const title = cells[1] && cells[1].v ? cells[1].v : "Без названия";
                 const desc = cells[2] && cells[2].v ? cells[2].v : "Описание отсутствует";
                 const reward = cells[3] && cells[3].v ? cells[3].v : "Не указана";
-
-                // Форматируем отображение даты
-                const cleanTime = String(time).split(' ')[0] || "Недавно";
 
                 list.innerHTML += `
                     <div class="task-card">
@@ -138,7 +135,7 @@
                         <p>${escapeHtml(desc)}</p>
                         <div class="task-meta">
                             <span class="reward-badge">💰 Награда: ${escapeHtml(reward)}</span>
-                            <span class="time-stamp">${escapeHtml(cleanTime)}</span>
+                            <span class="time-stamp">${escapeHtml(time)}</span>
                         </div>
                     </div>`;
             }
