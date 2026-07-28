@@ -1,100 +1,355 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Призрак • Секретная Сеть</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Ghost — Анонимные задания</title>
     <style>
-        * { box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
-        body { background-color: #0b0b0e; color: #7a889b; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .terminal { max-width: 500px; width: 100%; background: #111116; border: 1px solid #222230; padding: 25px; border-radius: 8px; box-shadow: 0 0 20px rgba(255, 62, 62, 0.1); }
-        h1 { color: #ff3e3e; text-align: center; font-size: 24px; letter-spacing: 4px; margin-bottom: 5px; text-shadow: 0 0 8px rgba(255, 62, 62, 0.3); }
-        .subtitle { text-align: center; font-size: 11px; color: #475366; margin-bottom: 30px; text-transform: uppercase; }
-        label { display: block; font-size: 12px; color: #a3b3cc; margin-bottom: 5px; text-transform: uppercase; }
-        input, textarea { width: 100%; background: #161622; border: 1px solid #2d2d3f; padding: 12px; color: #fff; border-radius: 4px; margin-bottom: 20px; outline: none; transition: 0.3s; }
-        input:focus, textarea:focus { border-color: #ff3e3e; box-shadow: 0 0 5px rgba(255, 62, 62, 0.2); }
-        button { width: 100%; background: #ff3e3e; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
-        button:hover { background: #e03232; transform: translateY(-1px); }
-        button:disabled { background: #322323; color: #666; cursor: not-allowed; }
-        .status { text-align: center; font-size: 13px; margin-top: 15px; display: none; padding: 10px; border-radius: 4px; }
-        .success { display: block; background: rgba(0, 200, 100, 0.1); color: #00c864; border: 1px solid rgba(0, 200, 100, 0.2); }
-        .error { display: block; background: rgba(255, 62, 62, 0.1); color: #ff3e3e; border: 1px solid rgba(255, 62, 62, 0.2); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        :root {
+            --bg-primary: #0b0e14;
+            --bg-secondary: #141b24;
+            --bg-card: #181f2b;
+            --bg-input: #0b1119;
+            --border-color: #29323e;
+            --text-primary: #e8edf5;
+            --text-secondary: #a4b5ce;
+            --text-muted: #7b8aa3;
+            --accent: #c94a4a;
+            --accent-hover: #e05555;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            --danger: #c94a4a;
+            --success: #4aaf7a;
+            --warning: #f0a030;
+            --chat-own: #2b5278;
+            --chat-other: #1e2632;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 100px;
+        }
+
+        .app-container {
+            max-width: 500px;
+            width: 100%;
+            padding: 0 16px 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 0 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--bg-secondary);
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 24px;
+        }
+
+        .logo:hover {
+            transform: rotate(5deg);
+            border-color: var(--accent);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            background: linear-gradient(135deg, #f5d6d6, #c98a8a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .header .online-count {
+            margin-left: auto;
+            background: rgba(201, 74, 74, 0.15);
+            border: 1px solid var(--accent);
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.65rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .feed {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .task-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .task-card:active {
+            transform: scale(0.98);
+            border-color: var(--accent);
+        }
+
+        .task-card h3 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+            padding-right: 70px;
+        }
+
+        .task-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .task-card .task-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+
+        .task-card .task-meta span {
+            background: var(--bg-input);
+            padding: 4px 12px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .task-card .category-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: rgba(74, 175, 122, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        /* Фиксированная кнопка внизу */
+        .bottom-action {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 468px;
+            z-index: 99;
+        }
+
+        .create-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(201, 74, 74, 0.4);
+            transition: all 0.2s;
+        }
+
+        .create-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Модальные окна */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 28px 28px 0 0;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 24px 20px 40px;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            animation: slideUp 0.25s cubic-bezier(0.1, 0.7, 0.1, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .close-btn {
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            float: right;
+            margin-top: -4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        /* Стили формы */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            color: #fff;
+            border-radius: 14px;
+            outline: none;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .submit-btn:disabled {
+            background: #251c1c;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .detail-row {
+            margin-bottom: 16px;
+            background: var(--bg-input);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .detail-row small { color: var(--text-muted); display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 0.75rem;}
+
+        #statusBox {
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-<div class="terminal">
-    <h1>PHANTOM</h1>
-    <div class="subtitle">Анонимная отправка секретных поручений</div>
-    
-    <form id="taskForm">
-        <label>Кодовое название услуги</label>
-        <input type="text" id="title" placeholder="Например: Передача X-пакета" required>
-        
-        <label>Шифрованное описание контракта</label>
-        <textarea id="description" rows="4" placeholder="Укажите суть задания, локацию или скрытые условия..." required></textarea>
-        
-        <label>Гонорар / Награда</label>
-        <input type="text" id="reward" placeholder="Например: 5000 руб / Наличные" required>
+    <div class="app-container">
+        <!-- Шапка приложения -->
+        <div class="header">
+            <div class="logo">👻</div>
+            <div>
+                <h1>GHOST</h1>
+                <p style="font-size: 0.8rem; color: var(--text-muted)">Сеть анонимных контрактов</p>
+            </div>
+            <div class="online-count">
+                <span style="width:6px; height:6px; background:var(--accent); border-radius:50%"></span> P2P Online
+            </div>
+        </div>
 
-        <label>Ваш contact для связи (Анонимно)</label>
-        <input type="text" id="contact" placeholder="Telegram, Session ID, Email..." required>
-        
-        <button type="submit">Опубликовать контракт</button>
-    </form>
-    
-    <div id="statusBox" class="status"></div>
-</div>
+        <!-- Лента активных контрактов -->
+        <div class="feed" id="taskFeed">
+            <p style="text-align:center; color:var(--text-muted); padding:40px 0;">Синхронизация с узлами сети...</p>
+        </div>
+    </div>
 
-<script>
-    // Ссылка на обработчик ответов вашей конкретной Google Формы
-    const GOOGLE_FORM_URL = "https://google.com"; 
-    
-    // Технические ID ваших полей
-    const ENTRY_TITLE = "entry.1746401037";       
-    const ENTRY_DESCRIPTION = "entry.1508215891"; 
-    const ENTRY_REWARD = "entry.724816159";      
-    const ENTRY_CONTACT = "entry.271922579";     
-
-    document.getElementById('taskForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const btn = e.target.querySelector('button');
-        const statusBox = document.getElementById('statusBox');
-        
-        btn.disabled = true;
-        btn.innerText = "ШИФРОВАНИЕ И ОТПРАВКА...";
-        statusBox.style.display = "none";
-        
-        // Упаковка данных в формат Google
-        const formData = new URLSearchParams();
-        formData.append(ENTRY_TITLE, document.getElementById('title').value);
-        formData.append(ENTRY_DESCRIPTION, document.getElementById('description').value);
-        formData.append(ENTRY_REWARD, document.getElementById('reward').value);
-        formData.append(ENTRY_CONTACT, document.getElementById('contact').value);
-        
-        // Отправка в облако Google (сервером выступает дата-центр Google, не ваш ПК)
-        fetch(GOOGLE_FORM_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData
-        })
-        .then(() => {
-            statusBox.className = "status success";
-            statusBox.innerText = "Контракт успешно ушел в зашифрованную сеть.";
-            document.getElementById('taskForm').reset();
-        })
-        .catch(() => {
-            statusBox.className = "status error";
-            statusBox.innerText = "Ошибка соединения. Попробуйте повторить.";
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerText = "Опубликовать контракт";
-        });
-    });
-</script>
-
-</body>
-</html>
+    <!-- Кнопка вызова создания -->
+    <div class="bottom-action">
+        <button class="create-btn" onclick="openModal('createModal')">+ Создать контракт</button>
+    </div>
