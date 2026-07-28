@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Ghost — Задания и Чаты</title>
+    <title>Ghost — Реальные пользователи</title>
     <style>
         * {
             margin: 0;
@@ -324,6 +324,19 @@
             margin-bottom: 4px;
         }
 
+        .account-tab .your-name {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .account-tab .your-name strong {
+            color: var(--text-primary);
+        }
+
         .create-form {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -572,6 +585,14 @@
             color: var(--text-muted);
         }
 
+        .contact-item .contact-tasks {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 2px 8px;
+            border-radius: 40px;
+        }
+
         .contact-item .invite-btn {
             padding: 4px 12px;
             background: var(--accent);
@@ -591,7 +612,7 @@
             background: var(--success);
         }
 
-        /* --- Создание группы как в Telegram --- */
+        /* --- Создание группы --- */
         .group-create-modal {
             display: none;
             position: fixed;
@@ -952,6 +973,9 @@
         <!-- Вкладка Аккаунт -->
         <div id="accountTab" class="account-tab">
             <h2>Создать задание</h2>
+            <div class="your-name">
+                👤 Ваше имя: <strong id="userNameDisplay"></strong>
+            </div>
             <form id="createTaskForm" class="create-form">
                 <div class="form-group">
                     <label for="taskPhoto">Фото задания <span class="optional">(не обязательно)</span></label>
@@ -984,16 +1008,16 @@
 
         <!-- Вкладка Чаты -->
         <div id="chatsTab" style="display: none;">
-            <h2 style="margin-bottom: 12px;">👥 Контакты и чаты</h2>
+            <h2 style="margin-bottom: 12px;">👥 Пользователи</h2>
 
             <!-- Кнопка создания группы -->
             <button id="showGroupCreateBtn" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:16px; color:white; font-size:1rem; cursor:pointer; margin-bottom:16px; transition: all 0.2s;">
                 ➕ Создать группу
             </button>
 
-            <!-- Список контактов -->
+            <!-- Список реальных пользователей -->
             <div class="contacts-list" id="contactsContainer">
-                <!-- Контакты будут добавлены через JS -->
+                <!-- Пользователи будут добавлены через JS -->
             </div>
 
             <!-- Список групповых чатов -->
@@ -1016,7 +1040,7 @@
         </div>
     </div>
 
-    <!-- Модалка создания группы (как в Telegram) -->
+    <!-- Модалка создания группы -->
     <div class="group-create-modal" id="groupCreateModal">
         <div class="group-create-content">
             <div class="modal-header">
@@ -1068,13 +1092,12 @@
             let tasks = [];
             let privateChats = {};
             let groupChats = {};
-            let contacts = [];
-            let currentModalId = null;
-            let currentChatId = null;
-            let currentGroupId = null;
             let userId = 'user_' + Math.random().toString(36).substr(2, 6);
             let userName = 'Ученик_' + Math.floor(Math.random() * 1000);
             let selectedContacts = [];
+            let currentModalId = null;
+            let currentChatId = null;
+            let currentGroupId = null;
 
             // --- DOM ---
             const feedContainer = document.getElementById('feedContainer');
@@ -1114,29 +1137,27 @@
             const selectedMembers = document.getElementById('selectedMembers');
             const contactsSelect = document.getElementById('contactsSelect');
             const createGroupBtn = document.getElementById('createGroupBtn');
+            const userNameDisplay = document.getElementById('userNameDisplay');
 
             // --- ЗАГРУЗКА ДАННЫХ ---
             function loadData() {
                 try {
-                    const storedTasks = localStorage.getItem('ghost_tasks_v7');
-                    if (storedTasks) tasks = JSON.parse(storedTasks);
-                    else {
-                        tasks = [
-                            { id: Date.now() - 100000, image: '', mainText: 'Помочь с математикой', detailText: '9 класс, кабинет 301',
-                                category: 'study', date: new Date().toISOString(), author: 'Аноним' },
-                            { id: Date.now() - 50000, image: '', mainText: 'Секретная вечеринка', detailText: 'В парке после школы',
-                                category: 'event', date: new Date().toISOString(), author: 'Аноним' }
-                        ];
+                    const storedTasks = localStorage.getItem('ghost_tasks_v8');
+                    if (storedTasks) {
+                        tasks = JSON.parse(storedTasks);
+                    } else {
+                        tasks = [];
                         saveTasks();
                     }
 
-                    const storedPrivate = localStorage.getItem('ghost_private_chats_v7');
+                    const storedPrivate = localStorage.getItem('ghost_private_chats_v8');
                     if (storedPrivate) privateChats = JSON.parse(storedPrivate);
                     else privateChats = {};
 
-                    const storedGroup = localStorage.getItem('ghost_group_chats_v7');
+                    const storedGroup = localStorage.getItem('ghost_group_chats_v8');
                     if (storedGroup) groupChats = JSON.parse(storedGroup);
                     else {
+                        // Создаём дефолтную группу с создателем
                         const defaultGroupId = 'group_' + Date.now();
                         groupChats = {
                             [defaultGroupId]: {
@@ -1150,38 +1171,36 @@
                         saveGroupChats();
                     }
 
-                    const storedContacts = localStorage.getItem('ghost_contacts_v7');
-                    if (storedContacts) contacts = JSON.parse(storedContacts);
-                    else {
-                        contacts = [
-                            { id: 'contact_1', name: 'Алексей' },
-                            { id: 'contact_2', name: 'Мария' },
-                            { id: 'contact_3', name: 'Дмитрий' },
-                            { id: 'contact_4', name: 'Екатерина' },
-                            { id: 'contact_5', name: 'Сергей' }
-                        ];
-                        saveContacts();
+                    const storedName = localStorage.getItem('ghost_username_v8');
+                    if (storedName) {
+                        userName = storedName;
+                    } else {
+                        // Запрашиваем имя при первом запуске
+                        const name = prompt('👋 Привет! Как тебя зовут? (это имя будут видеть другие)');
+                        if (name && name.trim()) {
+                            userName = name.trim();
+                            localStorage.setItem('ghost_username_v8', userName);
+                        }
                     }
+                    userNameDisplay.textContent = userName;
+
                 } catch (e) {
                     tasks = [];
                     privateChats = {};
                     groupChats = {};
-                    contacts = [];
                 }
                 updateUI();
                 renderContacts();
                 renderGroupChatsList();
             }
 
-            function saveTasks() { try { localStorage.setItem('ghost_tasks_v7', JSON.stringify(tasks)); } catch (e) {} }
+            function saveTasks() { try { localStorage.setItem('ghost_tasks_v8', JSON.stringify(tasks)); } catch (e) {} }
 
-            function savePrivateChats() { try { localStorage.setItem('ghost_private_chats_v7', JSON.stringify(privateChats)); } catch (
+            function savePrivateChats() { try { localStorage.setItem('ghost_private_chats_v8', JSON.stringify(privateChats)); } catch (
                 e) {} }
 
-            function saveGroupChats() { try { localStorage.setItem('ghost_group_chats_v7', JSON.stringify(groupChats)); } catch (
+            function saveGroupChats() { try { localStorage.setItem('ghost_group_chats_v8', JSON.stringify(groupChats)); } catch (
                 e) {} }
-
-            function saveContacts() { try { localStorage.setItem('ghost_contacts_v7', JSON.stringify(contacts)); } catch (e) {} }
 
             function updateUI() {
                 renderFeed();
@@ -1189,85 +1208,96 @@
                 updateChatBadge();
             }
 
-            // --- РЕНДЕР ЛЕНТЫ ---
-            function renderFeed() {
-                if (tasks.length === 0) {
-                    feedContainer.innerHTML = `<div class="empty-state">🎒 Нет заданий. Создайте первое!</div>`;
-                    return;
-                }
-                feedContainer.innerHTML = '';
-                [...tasks].reverse().forEach(task => {
-                    const card = document.createElement('div');
-                    card.className = `task-card cat-${task.category || 'other'}`;
-                    card.dataset.id = task.id;
-                    const imageHtml = task.image ? `<img src="${task.image}" alt="Фото" />` :
-                        `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='180' viewBox='0 0 200 180'%3E%3Crect width='200' height='180' fill='%23141b24'/%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='%237b8aa3' text-anchor='middle' dy='.3em'%3E📚 Нет фото%3C/text%3E%3C/svg%3E" alt="Нет фото" />`;
-                    const emoji = { 'study': '📚', 'help': '🤝', 'event': '🎉', 'secret': '🔒', 'shop': '🛍️', 'sport': '⚽',
-                        'tech': '💻', 'other': '📌' } [task.category] || '📌';
-                    const name = { 'study': 'Учёба', 'help': 'Помощь', 'event': 'Мероприятие', 'secret': 'Секретное',
-                        'shop': 'Покупки', 'sport': 'Спорт', 'tech': 'Техника', 'other': 'Другое' } [task.category] ||
-                        'Другое';
-                    const chatCount = privateChats[task.id] ? privateChats[task.id].length : 0;
-                    card.innerHTML = `
-                        ${imageHtml}
-                        <h3>${escapeHtml(task.mainText) || 'Без заголовка'}</h3>
-                        ${task.detailText ? `<p>${escapeHtml(task.detailText.substring(0, 80))}</p>` : ''}
-                        <div class="task-meta">
-                            <span>${emoji} ${name}</span>
-                            <span>🕐 ${new Date(task.date).toLocaleDateString('ru-RU')}</span>
-                            <span>👤 ${escapeHtml(task.author || 'Аноним')}</span>
-                            ${chatCount > 0 ? `<span>💬 ${chatCount}</span>` : ''}
-                        </div>
-                        <div class="category-badge">${emoji} ${name}</div>
-                    `;
-                    card.addEventListener('click', () => openDetail(task.id));
-                    feedContainer.appendChild(card);
+            // --- ПОЛУЧЕНИЕ СПИСКА РЕАЛЬНЫХ ПОЛЬЗОВАТЕЛЕЙ ---
+            function getRealUsers() {
+                const users = [];
+                const userIds = new Set();
+
+                // Добавляем всех авторов заданий
+                tasks.forEach(task => {
+                    if (task.authorId && task.authorId !== userId && !userIds.has(task.authorId)) {
+                        userIds.add(task.authorId);
+                        users.push({
+                            id: task.authorId,
+                            name: task.author || 'Аноним',
+                            tasksCount: tasks.filter(t => t.authorId === task.authorId).length
+                        });
+                    }
                 });
-            }
 
-            function updateTaskCount() { taskCount.textContent = tasks.length; }
-
-            function updateChatBadge() {
-                let hasNew = false;
-                for (const taskId in privateChats) {
-                    const msgs = privateChats[taskId];
-                    if (msgs.length > 0 && msgs[msgs.length - 1].from !== userId && !msgs[msgs.length - 1].read) { hasNew =
-                        true; break; }
+                // Добавляем участников групповых чатов
+                for (const groupId in groupChats) {
+                    const group = groupChats[groupId];
+                    group.members.forEach(memberId => {
+                        if (memberId !== userId && !userIds.has(memberId)) {
+                            userIds.add(memberId);
+                            // Пытаемся найти имя из заданий
+                            const taskAuthor = tasks.find(t => t.authorId === memberId);
+                            users.push({
+                                id: memberId,
+                                name: taskAuthor ? taskAuthor.author : 'Пользователь',
+                                tasksCount: tasks.filter(t => t.authorId === memberId).length
+                            });
+                        }
+                    });
                 }
-                if (!hasNew) {
-                    for (const groupId in groupChats) {
-                        const msgs = groupChats[groupId].messages;
-                        if (msgs.length > 0 && msgs[msgs.length - 1].from !== userId && msgs[msgs.length - 1].from !==
-                            'system' && !msgs[msgs.length - 1].read) { hasNew = true; break; }
+
+                // Добавляем участников личных чатов
+                for (const chatId in privateChats) {
+                    if (chatId.startsWith('contact_')) {
+                        const contactId = chatId.replace('contact_', '');
+                        if (contactId !== userId && !userIds.has(contactId)) {
+                            userIds.add(contactId);
+                            const taskAuthor = tasks.find(t => t.authorId === contactId);
+                            users.push({
+                                id: contactId,
+                                name: taskAuthor ? taskAuthor.author : 'Пользователь',
+                                tasksCount: tasks.filter(t => t.authorId === contactId).length
+                            });
+                        }
                     }
                 }
-                chatBadge.style.display = hasNew ? 'block' : 'none';
+
+                return users;
             }
 
-            // --- РЕНДЕР КОНТАКТОВ ---
+            // --- РЕНДЕР КОНТАКТОВ (реальные пользователи) ---
             function renderContacts() {
                 if (!contactsContainer) return;
                 contactsContainer.innerHTML = '';
-                contacts.forEach(contact => {
+
+                const users = getRealUsers();
+
+                if (users.length === 0) {
+                    contactsContainer.innerHTML = `
+                        <div class="empty-state" style="padding: 20px 0;">
+                            👻 Пока нет других пользователей.<br>
+                            Создай задание, и другие смогут с тобой связаться!
+                        </div>
+                    `;
+                    return;
+                }
+
+                users.forEach(user => {
                     const div = document.createElement('div');
                     div.className = 'contact-item';
-                    const avatarLetter = contact.name.charAt(0).toUpperCase();
+                    const avatarLetter = user.name.charAt(0).toUpperCase();
                     div.innerHTML = `
                         <div class="contact-info">
                             <div class="contact-avatar">${avatarLetter}</div>
                             <div>
-                                <div class="contact-name">${escapeHtml(contact.name)}</div>
-                                <div class="contact-status">🟢 онлайн</div>
+                                <div class="contact-name">${escapeHtml(user.name)}</div>
+                                <div class="contact-status">🟢 онлайн • ${user.tasksCount} заданий</div>
                             </div>
                         </div>
-                        <button class="invite-btn" data-contact-id="${contact.id}">💬 Чат</button>
+                        <button class="invite-btn" data-contact-id="${user.id}">💬 Чат</button>
                     `;
                     const chatBtn = div.querySelector('.invite-btn');
                     chatBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const fakeTaskId = 'contact_' + contact.id;
-                        if (!privateChats[fakeTaskId]) privateChats[fakeTaskId] = [];
-                        openPrivateChat(fakeTaskId, contact.name);
+                        const chatId = 'contact_' + user.id;
+                        if (!privateChats[chatId]) privateChats[chatId] = [];
+                        openPrivateChat(chatId, user.name);
                     });
                     contactsContainer.appendChild(div);
                 });
@@ -1286,7 +1316,6 @@
                     const group = groupChats[groupId];
                     const div = document.createElement('div');
                     div.className = 'contact-item';
-                    const lastMsg = group.messages.length > 0 ? group.messages[group.messages.length - 1] : null;
                     div.innerHTML = `
                         <div class="contact-info">
                             <div class="contact-avatar">👥</div>
@@ -1376,14 +1405,19 @@
                         div.style.textAlign = 'center';
                         div.style.fontStyle = 'italic';
                     }
-                    const sender = msg.from === 'system' ? '' : (msg.from === userId ? 'Вы' : (contacts.find(c => c
-                        .id === msg.from)?.name || 'Контакт'));
+                    const sender = msg.from === 'system' ? '' : (msg.from === userId ? 'Вы' : (getUserById(msg.from)?.name ||
+                        'Контакт'));
                     const time = new Date(msg.time).toLocaleTimeString('ru-RU', { hour: '2-digit',
                     minute: '2-digit' });
                     div.innerHTML = `${sender ? sender + ': ' : ''}${escapeHtml(msg.text)} <span class="time">${time}</span>`;
                     groupChatMessages.appendChild(div);
                 });
                 groupChatMessages.scrollTop = groupChatMessages.scrollHeight;
+            }
+
+            function getUserById(id) {
+                const users = getRealUsers();
+                return users.find(u => u.id === id);
             }
 
             function sendGroupMessage() {
@@ -1398,7 +1432,7 @@
                 updateChatBadge();
             }
 
-            // --- СОЗДАНИЕ ГРУППЫ (как в Telegram) ---
+            // --- СОЗДАНИЕ ГРУППЫ ---
             function openGroupCreateModal() {
                 selectedContacts = [];
                 groupCreateModal.classList.add('active');
@@ -1416,23 +1450,29 @@
 
             function renderContactsSelect() {
                 contactsSelect.innerHTML = '';
-                contacts.forEach(contact => {
-                    const isSelected = selectedContacts.some(c => c.id === contact.id);
+                const users = getRealUsers();
+                if (users.length === 0) {
+                    contactsSelect.innerHTML =
+                        '<div class="empty-state">Нет других пользователей. Создайте задание, чтобы появиться в списке!</div>';
+                    return;
+                }
+                users.forEach(user => {
+                    const isSelected = selectedContacts.some(c => c.id === user.id);
                     const div = document.createElement('div');
                     div.className = `contact-select-item ${isSelected ? 'selected' : ''}`;
-                    const avatarLetter = contact.name.charAt(0).toUpperCase();
+                    const avatarLetter = user.name.charAt(0).toUpperCase();
                     div.innerHTML = `
                         <div class="checkbox"></div>
                         <div class="contact-avatar">${avatarLetter}</div>
                         <div>
-                            <div style="color: var(--text-secondary);">${escapeHtml(contact.name)}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">🟢 онлайн</div>
+                            <div style="color: var(--text-secondary);">${escapeHtml(user.name)}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">${user.tasksCount} заданий</div>
                         </div>
                     `;
                     div.addEventListener('click', () => {
-                        const index = selectedContacts.findIndex(c => c.id === contact.id);
+                        const index = selectedContacts.findIndex(c => c.id === user.id);
                         if (index === -1) {
-                            selectedContacts.push(contact);
+                            selectedContacts.push(user);
                         } else {
                             selectedContacts.splice(index, 1);
                         }
@@ -1451,17 +1491,17 @@
                     createGroupBtn.disabled = true;
                     return;
                 }
-                selectedContacts.forEach(contact => {
+                selectedContacts.forEach(user => {
                     const span = document.createElement('span');
                     span.className = 'selected-member';
                     span.innerHTML = `
-                        ${escapeHtml(contact.name)}
-                        <span class="remove-member" data-id="${contact.id}">✕</span>
+                        ${escapeHtml(user.name)}
+                        <span class="remove-member" data-id="${user.id}">✕</span>
                     `;
                     const removeBtn = span.querySelector('.remove-member');
                     removeBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        selectedContacts = selectedContacts.filter(c => c.id !== contact.id);
+                        selectedContacts = selectedContacts.filter(c => c.id !== user.id);
                         renderContactsSelect();
                         updateSelectedMembers();
                     });
@@ -1561,6 +1601,61 @@
                 setTimeout(() => toast.remove(), 3000);
             }
 
+            // --- РЕНДЕР ЛЕНТЫ ---
+            function renderFeed() {
+                if (tasks.length === 0) {
+                    feedContainer.innerHTML = `<div class="empty-state">🎒 Нет заданий. Создайте первое!</div>`;
+                    return;
+                }
+                feedContainer.innerHTML = '';
+                [...tasks].reverse().forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = `task-card cat-${task.category || 'other'}`;
+                    card.dataset.id = task.id;
+                    const imageHtml = task.image ? `<img src="${task.image}" alt="Фото" />` :
+                        `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='180' viewBox='0 0 200 180'%3E%3Crect width='200' height='180' fill='%23141b24'/%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='%237b8aa3' text-anchor='middle' dy='.3em'%3E📚 Нет фото%3C/text%3E%3C/svg%3E" alt="Нет фото" />`;
+                    const emoji = { 'study': '📚', 'help': '🤝', 'event': '🎉', 'secret': '🔒', 'shop': '🛍️', 'sport': '⚽',
+                        'tech': '💻', 'other': '📌' } [task.category] || '📌';
+                    const name = { 'study': 'Учёба', 'help': 'Помощь', 'event': 'Мероприятие', 'secret': 'Секретное',
+                        'shop': 'Покупки', 'sport': 'Спорт', 'tech': 'Техника', 'other': 'Другое' } [task.category] ||
+                        'Другое';
+                    const chatCount = privateChats[task.id] ? privateChats[task.id].length : 0;
+                    card.innerHTML = `
+                        ${imageHtml}
+                        <h3>${escapeHtml(task.mainText) || 'Без заголовка'}</h3>
+                        ${task.detailText ? `<p>${escapeHtml(task.detailText.substring(0, 80))}</p>` : ''}
+                        <div class="task-meta">
+                            <span>${emoji} ${name}</span>
+                            <span>🕐 ${new Date(task.date).toLocaleDateString('ru-RU')}</span>
+                            <span>👤 ${escapeHtml(task.author || 'Аноним')}</span>
+                            ${chatCount > 0 ? `<span>💬 ${chatCount}</span>` : ''}
+                        </div>
+                        <div class="category-badge">${emoji} ${name}</div>
+                    `;
+                    card.addEventListener('click', () => openDetail(task.id));
+                    feedContainer.appendChild(card);
+                });
+            }
+
+            function updateTaskCount() { taskCount.textContent = tasks.length; }
+
+            function updateChatBadge() {
+                let hasNew = false;
+                for (const taskId in privateChats) {
+                    const msgs = privateChats[taskId];
+                    if (msgs.length > 0 && msgs[msgs.length - 1].from !== userId && !msgs[msgs.length - 1].read) { hasNew =
+                        true; break; }
+                }
+                if (!hasNew) {
+                    for (const groupId in groupChats) {
+                        const msgs = groupChats[groupId].messages;
+                        if (msgs.length > 0 && msgs[msgs.length - 1].from !== userId && msgs[msgs.length - 1].from !==
+                            'system' && !msgs[msgs.length - 1].read) { hasNew = true; break; }
+                    }
+                }
+                chatBadge.style.display = hasNew ? 'block' : 'none';
+            }
+
             // --- ДОБАВЛЕНИЕ ЗАДАНИЯ ---
             function addTask(mainText, detailText, imageDataUrl, category) {
                 const newTask = {
@@ -1570,7 +1665,8 @@
                     detailText: detailText || '',
                     category: category || 'other',
                     date: new Date().toISOString(),
-                    author: userName
+                    author: userName,
+                    authorId: userId
                 };
                 tasks.push(newTask);
                 saveTasks();
@@ -1615,7 +1711,8 @@
                 if (currentModalId) {
                     const task = tasks.find(t => t.id === currentModalId);
                     if (task) {
-                        const chatId = currentModalId;
+                        // Если автор задания - это мы, открываем чат с автором
+                        const chatId = 'contact_' + (task.authorId || 'unknown');
                         if (!privateChats[chatId]) privateChats[chatId] = [];
                         openPrivateChat(chatId, task.author || 'Автор');
                         closeDetail();
@@ -1638,7 +1735,7 @@
             groupChatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendGroupMessage(); });
             closeGroupChatBtn.addEventListener('click', closeChat);
 
-            // Создание группы (Telegram style)
+            // Создание группы
             showGroupCreateBtn.addEventListener('click', openGroupCreateModal);
             closeGroupModal.addEventListener('click', closeGroupCreateModal);
             groupCreateModal.addEventListener('click', function(e) {
@@ -1657,7 +1754,7 @@
             // --- ЗАПУСК ---
             loadData();
             switchTab('feed');
-            console.log('👻 Ghost v7 загружен!');
+            console.log('👻 Ghost v8 загружен!');
             console.log('🆔 Ваш ID:', userId);
             console.log('👤 Ваше имя:', userName);
         })();
