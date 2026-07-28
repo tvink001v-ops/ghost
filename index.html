@@ -779,6 +779,7 @@
         let chatTaskId = null;
         let chatMessages = [];
         let chatChannel = null;
+        let isChatSubscribed = false;
 
         // Элементы
         const registerOverlay = document.getElementById('registerOverlay');
@@ -877,12 +878,13 @@
             }
         }
 
-        // ===== ЧАТ С ПОДПИСКОЙ НА РЕАЛЬНОЕ ВРЕМЯ =====
+        // ===== ЧАТ С ПОДПИСКОЙ =====
         function subscribeToChat(taskId) {
             // Отписываемся от старого канала
             if (chatChannel) {
                 supabase.removeChannel(chatChannel);
                 chatChannel = null;
+                isChatSubscribed = false;
             }
 
             if (!isConfigured || !taskId) return;
@@ -915,9 +917,11 @@
                 )
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
+                        isChatSubscribed = true;
                         chatOnline.textContent = '🟢 онлайн';
                         chatOnline.style.color = '#238636';
                     } else {
+                        isChatSubscribed = false;
                         chatOnline.textContent = '🔴 офлайн';
                         chatOnline.style.color = '#da3633';
                     }
@@ -943,9 +947,11 @@
             if (chatChannel) {
                 supabase.removeChannel(chatChannel);
                 chatChannel = null;
+                isChatSubscribed = false;
             }
             chatOverlay.classList.remove('open');
             chatTaskId = null;
+            chatMessages = [];
         }
 
         chatClose.addEventListener('click', closeChat);
