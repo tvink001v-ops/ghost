@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Ghost — Чаты как в Telegram</title>
+    <title>Ghost — Анонимные задания с чатом</title>
     <style>
         * {
             margin: 0;
@@ -51,7 +51,6 @@
             padding: 0 16px 20px;
         }
 
-        /* --- Шапка --- */
         .header {
             display: flex;
             align-items: center;
@@ -111,7 +110,6 @@
             gap: 4px;
         }
 
-        /* --- Лента заданий --- */
         .feed {
             display: flex;
             flex-direction: column;
@@ -187,7 +185,6 @@
             border: 1px solid var(--border-color);
         }
 
-        /* --- Модалка --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -311,7 +308,6 @@
             border-color: #c94a4a;
         }
 
-        /* --- Вкладка Аккаунт --- */
         .account-tab {
             display: none;
             flex-direction: column;
@@ -323,24 +319,38 @@
             display: flex;
         }
 
-        .account-tab h2 {
-            font-weight: 400;
-            font-size: 1.6rem;
-            color: var(--text-primary);
+        .account-tab .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 4px;
         }
 
-        .account-tab .your-name {
+        .account-tab .account-header h2 {
+            font-weight: 400;
+            font-size: 1.6rem;
+            color: var(--text-primary);
+        }
+
+        .account-tab .user-info {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 12px 16px;
             color: var(--text-secondary);
             font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .account-tab .your-name strong {
+        .account-tab .user-info strong {
             color: var(--text-primary);
+        }
+
+        .account-tab .user-info .user-id {
+            font-size: 0.6rem;
+            color: var(--text-muted);
         }
 
         .create-form {
@@ -442,7 +452,7 @@
             transform: scale(1.02);
         }
 
-        /* --- ЧАТЫ (Telegram style) --- */
+        /* --- Чат (Telegram style) --- */
         .chat-section,
         .group-chat-section {
             display: none;
@@ -673,14 +683,6 @@
             color: var(--text-muted);
         }
 
-        .contact-item .contact-tasks {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            background: var(--bg-card);
-            padding: 2px 8px;
-            border-radius: 40px;
-        }
-
         .contact-item .invite-btn {
             padding: 4px 14px;
             background: var(--accent);
@@ -887,7 +889,6 @@
             transform: none;
         }
 
-        /* --- Нижняя навигация --- */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -976,7 +977,6 @@
             text-align: center;
         }
 
-        /* --- Категории --- */
         .cat-study {
             border-left: 4px solid var(--accent);
         }
@@ -1035,7 +1035,7 @@
             <div class="empty-state">Нет заданий. Создайте первое!</div>
         </div>
 
-        <!-- Личный чат (Telegram style) -->
+        <!-- Личный чат -->
         <div class="chat-section" id="chatSection">
             <div class="chat-header">
                 <div class="chat-avatar" id="chatAvatar">
@@ -1054,7 +1054,7 @@
             </div>
         </div>
 
-        <!-- Групповой чат (Telegram style) -->
+        <!-- Групповой чат -->
         <div class="group-chat-section" id="groupChatSection">
             <div class="chat-header">
                 <div class="chat-avatar" id="groupChatAvatar">
@@ -1075,14 +1075,23 @@
 
         <!-- Вкладка Аккаунт -->
         <div id="accountTab" class="account-tab">
-            <h2>Создать задание</h2>
-            <div class="your-name">
-                👤 Ваш ник: <strong id="userNameDisplay"></strong>
+            <div class="account-header">
+                <h2>Создать задание</h2>
             </div>
+
+            <div class="user-info">
+                <span>👤 <strong id="userNameDisplay"></strong></span>
+                <span class="user-id" id="userIdDisplay"></span>
+            </div>
+
             <form id="createTaskForm" class="create-form">
                 <div class="form-group">
                     <label for="taskPhoto">Фото задания <span class="optional">(не обязательно)</span></label>
                     <input type="file" id="taskPhoto" accept="image/*" />
+                </div>
+                <div class="form-group">
+                    <label for="taskName">Твоё имя <span class="required">*</span></label>
+                    <input type="text" id="taskName" placeholder="Напиши своё имя..." required />
                 </div>
                 <div class="form-group">
                     <label for="taskMainText">Что сделать? <span class="required">*</span></label>
@@ -1105,7 +1114,7 @@
                         <option value="other">📌 Другое</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-publish">👻 Опубликовать анонимно</button>
+                <button type="submit" class="btn-publish">👻 Опубликовать</button>
             </form>
         </div>
 
@@ -1189,24 +1198,11 @@
             let privateChats = {};
             let groupChats = {};
             let userId = 'user_' + Math.random().toString(36).substr(2, 6);
-            let userName = '';
+            let userName = 'Аноним';
             let selectedContacts = [];
             let currentModalId = null;
             let currentChatId = null;
             let currentGroupId = null;
-
-            // --- Генерация случайного ника ---
-            const nicknames = [
-                'Космический_ёж', 'Лунный_заяц', 'Солнечный_пёс', 'Звёздный_кот', 'Облачный_дракон',
-                'Теневой_волк', 'Радужный_ёжик', 'Ночной_феникс', 'Утренний_жаворонок', 'Вечерний_соловей',
-                'Быстрый_гепард', 'Мудрая_сова', 'Хитрый_лис', 'Смелый_тигр', 'Добрый_медведь',
-                'Ghost_2024', 'Shadow_Walker', 'Night_Rider', 'Star_Chaser', 'Cloud_Dreamer',
-                'Аноним_007', 'Секретный_агент', 'Просто_ученик', 'Школьный_призрак', 'Ночной_странник'
-            ];
-
-            function generateNickname() {
-                return nicknames[Math.floor(Math.random() * nicknames.length)] + '_' + Math.floor(Math.random() * 100);
-            }
 
             // --- DOM ---
             const feedContainer = document.getElementById('feedContainer');
@@ -1250,21 +1246,19 @@
             const contactsSelect = document.getElementById('contactsSelect');
             const createGroupBtn = document.getElementById('createGroupBtn');
             const userNameDisplay = document.getElementById('userNameDisplay');
+            const userIdDisplay = document.getElementById('userIdDisplay');
 
             // --- ЗАГРУЗКА ДАННЫХ ---
             function loadData() {
                 try {
-                    // Загружаем или генерируем ник
-                    const storedName = localStorage.getItem('ghost_username_v9');
+                    const storedName = localStorage.getItem('ghost_username_v11');
                     if (storedName) {
                         userName = storedName;
-                    } else {
-                        userName = generateNickname();
-                        localStorage.setItem('ghost_username_v9', userName);
                     }
                     userNameDisplay.textContent = userName;
+                    userIdDisplay.textContent = 'ID: ' + userId.substr(0, 8);
 
-                    const storedTasks = localStorage.getItem('ghost_tasks_v9');
+                    const storedTasks = localStorage.getItem('ghost_tasks_v11');
                     if (storedTasks) {
                         tasks = JSON.parse(storedTasks);
                     } else {
@@ -1272,13 +1266,18 @@
                         saveTasks();
                     }
 
-                    const storedPrivate = localStorage.getItem('ghost_private_chats_v9');
-                    if (storedPrivate) privateChats = JSON.parse(storedPrivate);
-                    else privateChats = {};
+                    const storedPrivate = localStorage.getItem('ghost_private_chats_v11');
+                    if (storedPrivate) {
+                        privateChats = JSON.parse(storedPrivate);
+                    } else {
+                        privateChats = {};
+                        savePrivateChats();
+                    }
 
-                    const storedGroup = localStorage.getItem('ghost_group_chats_v9');
-                    if (storedGroup) groupChats = JSON.parse(storedGroup);
-                    else {
+                    const storedGroup = localStorage.getItem('ghost_group_chats_v11');
+                    if (storedGroup) {
+                        groupChats = JSON.parse(storedGroup);
+                    } else {
                         const defaultGroupId = 'group_' + Date.now();
                         groupChats = {
                             [defaultGroupId]: {
@@ -1293,6 +1292,7 @@
                     }
 
                 } catch (e) {
+                    console.error('Ошибка загрузки:', e);
                     tasks = [];
                     privateChats = {};
                     groupChats = {};
@@ -1302,13 +1302,17 @@
                 renderGroupChatsList();
             }
 
-            function saveTasks() { try { localStorage.setItem('ghost_tasks_v9', JSON.stringify(tasks)); } catch (e) {} }
+            function saveTasks() {
+                try { localStorage.setItem('ghost_tasks_v11', JSON.stringify(tasks)); } catch (e) {}
+            }
 
-            function savePrivateChats() { try { localStorage.setItem('ghost_private_chats_v9', JSON.stringify(privateChats)); } catch (
-                e) {} }
+            function savePrivateChats() {
+                try { localStorage.setItem('ghost_private_chats_v11', JSON.stringify(privateChats)); } catch (e) {}
+            }
 
-            function saveGroupChats() { try { localStorage.setItem('ghost_group_chats_v9', JSON.stringify(groupChats)); } catch (
-                e) {} }
+            function saveGroupChats() {
+                try { localStorage.setItem('ghost_group_chats_v11', JSON.stringify(groupChats)); } catch (e) {}
+            }
 
             function updateUI() {
                 renderFeed();
@@ -1318,12 +1322,6 @@
             }
 
             function updateGroupStatus() {
-                const groupIds = Object.keys(groupChats);
-                const totalMembers = new Set();
-                groupIds.forEach(gid => {
-                    groupChats[gid].members.forEach(m => totalMembers.add(m));
-                });
-                // Обновляем статус для открытой группы
                 if (currentGroupId && groupChats[currentGroupId]) {
                     groupChatStatus.textContent = `👥 ${groupChats[currentGroupId].members.length} участников`;
                 }
@@ -1456,7 +1454,7 @@
                 });
             }
 
-            // --- ОТКРЫТЬ ЛИЧНЫЙ ЧАТ (Telegram style) ---
+            // --- ОТКРЫТЬ ЛИЧНЫЙ ЧАТ ---
             function openPrivateChat(chatId, partnerName) {
                 currentChatId = chatId;
                 currentGroupId = null;
@@ -1503,7 +1501,7 @@
                 updateChatBadge();
             }
 
-            // --- ГРУППОВЫЕ ЧАТЫ (Telegram style) ---
+            // --- ГРУППОВЫЕ ЧАТЫ ---
             function openGroupChat(groupId) {
                 currentGroupId = groupId;
                 currentChatId = null;
@@ -1782,16 +1780,16 @@
             }
 
             // --- ДОБАВЛЕНИЕ ЗАДАНИЯ ---
-            function addTask(mainText, detailText, imageDataUrl, category) {
+            function addTask(taskName, mainText, detailText, imageDataUrl, category) {
                 const newTask = {
                     id: Date.now(),
                     image: imageDataUrl || '',
+                    author: taskName || 'Аноним',
+                    authorId: userId,
                     mainText: mainText,
                     detailText: detailText || '',
                     category: category || 'other',
-                    date: new Date().toISOString(),
-                    author: userName,
-                    authorId: userId
+                    date: new Date().toISOString()
                 };
                 tasks.push(newTask);
                 saveTasks();
@@ -1814,21 +1812,35 @@
             }
 
             // --- ОБРАБОТЧИКИ ---
+
+            // Создание задания
             createForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const fileInput = document.getElementById('taskPhoto');
+                const taskName = document.getElementById('taskName').value.trim();
                 const mainText = document.getElementById('taskMainText').value.trim();
                 const detailText = document.getElementById('taskDetailText').value.trim();
                 const category = document.getElementById('taskCategory').value;
+
+                if (!taskName) { showToast('Напишите своё имя!'); return; }
                 if (!mainText) { showToast('Напишите, что нужно сделать.'); return; }
+
+                userName = taskName;
+                localStorage.setItem('ghost_username_v11', userName);
+                userNameDisplay.textContent = userName;
+
                 const file = fileInput.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(ev) { addTask(mainText, detailText, ev.target.result, category); };
-                    reader.onerror = function() { addTask(mainText, detailText, '', category); };
+                    reader.onload = function(ev) {
+                        addTask(taskName, mainText, detailText, ev.target.result, category);
+                    };
+                    reader.onerror = function() {
+                        addTask(taskName, mainText, detailText, '', category);
+                    };
                     reader.readAsDataURL(file);
                 } else {
-                    addTask(mainText, detailText, '', category);
+                    addTask(taskName, mainText, detailText, '', category);
                 }
             });
 
@@ -1845,7 +1857,12 @@
                 }
             });
 
-            modalDeleteBtn.addEventListener('click', function() { if (currentModalId) deleteTask(currentModalId); });
+            modalDeleteBtn.addEventListener('click', function() {
+                if (currentModalId) {
+                    deleteTask(currentModalId);
+                }
+            });
+
             modalCloseBtn.addEventListener('click', closeDetail);
             modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeDetail(); });
 
@@ -1878,9 +1895,10 @@
             // --- ЗАПУСК ---
             loadData();
             switchTab('feed');
-            console.log('👻 Ghost v9 загружен!');
+
+            console.log('👻 Ghost v11 загружен!');
             console.log('🆔 Ваш ID:', userId);
-            console.log('👤 Ваш ник:', userName);
+            console.log('👤 Ваше имя:', userName);
         })();
     </script>
 
