@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Ghost — Анонимные задания с чатом</title>
+    <title>Ghost — P2P Задания и Чат</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -51,6 +52,7 @@
             padding: 0 16px 20px;
         }
 
+        /* --- Шапка --- */
         .header {
             display: flex;
             align-items: center;
@@ -97,19 +99,27 @@
             letter-spacing: -0.5px;
         }
 
-        .header .online-count {
+        .header .connection-status {
             margin-left: auto;
             background: rgba(74, 175, 122, 0.15);
             border: 1px solid var(--success);
             border-radius: 40px;
             padding: 4px 12px;
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: var(--success);
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
         }
 
+        .header .connection-status.disconnected {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: rgba(200, 70, 70, 0.15);
+        }
+
+        /* --- Лента --- */
         .feed {
             display: flex;
             flex-direction: column;
@@ -185,6 +195,19 @@
             border: 1px solid var(--border-color);
         }
 
+        .task-card .from-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            padding: 2px 10px;
+            border-radius: 40px;
+            font-size: 0.55rem;
+            background: var(--bg-input);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        /* --- Модалка --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -308,6 +331,7 @@
             border-color: #c94a4a;
         }
 
+        /* --- Вкладка Аккаунт --- */
         .account-tab {
             display: none;
             flex-direction: column;
@@ -340,6 +364,12 @@
             color: var(--text-secondary);
             font-size: 0.9rem;
             display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .account-tab .user-info .user-row {
+            display: flex;
             justify-content: space-between;
             align-items: center;
         }
@@ -348,9 +378,73 @@
             color: var(--text-primary);
         }
 
-        .account-tab .user-info .user-id {
-            font-size: 0.6rem;
+        .account-tab .user-info .peer-id {
+            font-size: 0.55rem;
             color: var(--text-muted);
+            word-break: break-all;
+            background: var(--bg-input);
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .account-tab .user-info .peer-id:hover {
+            background: var(--bg-card);
+            border-color: var(--accent);
+        }
+
+        .account-tab .connect-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px 16px;
+        }
+
+        .account-tab .connect-section label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .account-tab .connect-section .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .account-tab .connect-section .input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .account-tab .connect-section .input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .account-tab .connect-section .input-group button {
+            padding: 8px 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .account-tab .connect-section .input-group button:hover {
+            background: var(--accent-hover);
+        }
+
+        .account-tab .connect-section .input-group button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .create-form {
@@ -452,9 +546,8 @@
             transform: scale(1.02);
         }
 
-        /* --- Чат (Telegram style) --- */
-        .chat-section,
-        .group-chat-section {
+        /* --- Чат --- */
+        .chat-section {
             display: none;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -466,8 +559,7 @@
             flex-direction: column;
         }
 
-        .chat-section.active,
-        .group-chat-section.active {
+        .chat-section.active {
             display: flex;
         }
 
@@ -485,7 +577,6 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            overflow: hidden;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             flex-shrink: 0;
@@ -493,12 +584,6 @@
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
-        }
-
-        .chat-header .chat-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
         .chat-header .chat-info {
@@ -565,17 +650,6 @@
             border-bottom-left-radius: 4px;
         }
 
-        .chat-message.system {
-            align-self: center;
-            background: var(--bg-secondary);
-            color: var(--text-muted);
-            font-style: italic;
-            font-size: 0.8rem;
-            padding: 4px 12px;
-            border-radius: 40px;
-            max-width: 90%;
-        }
-
         .chat-message .msg-time {
             font-size: 0.55rem;
             color: var(--text-muted);
@@ -628,265 +702,6 @@
         .chat-input-group button:hover {
             background: var(--accent-hover);
             transform: scale(1.02);
-        }
-
-        /* --- Контакты --- */
-        .contacts-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin: 12px 0;
-        }
-
-        .contact-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px;
-            background: var(--bg-input);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .contact-item:hover {
-            border-color: var(--accent);
-        }
-
-        .contact-item .contact-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .contact-item .contact-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .contact-item .contact-name {
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .contact-item .contact-status {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-        }
-
-        .contact-item .invite-btn {
-            padding: 4px 14px;
-            background: var(--accent);
-            border: none;
-            border-radius: 40px;
-            color: white;
-            cursor: pointer;
-            font-size: 0.7rem;
-            transition: all 0.2s;
-        }
-
-        .contact-item .invite-btn:hover {
-            background: var(--accent-hover);
-        }
-
-        /* --- Создание группы --- */
-        .group-create-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 2000;
-            align-items: flex-end;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .group-create-modal.active {
-            display: flex;
-        }
-
-        .group-create-content {
-            background: var(--bg-secondary);
-            border-radius: 28px 28px 0 0;
-            max-width: 500px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 24px 20px 30px;
-            border: 1px solid var(--border-color);
-            border-bottom: none;
-            animation: slideUp 0.3s ease;
-        }
-
-        .group-create-content .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .group-create-content .modal-header h2 {
-            font-size: 1.3rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .group-create-content .modal-header .close-modal {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .group-create-content .group-name-input {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            margin-bottom: 16px;
-        }
-
-        .group-create-content .group-name-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .group-create-content .selected-members {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
-            padding: 8px;
-            background: var(--bg-input);
-            border-radius: 12px;
-            min-height: 44px;
-            border: 1px dashed var(--border-color);
-        }
-
-        .group-create-content .selected-member {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--accent);
-            padding: 4px 10px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            color: white;
-        }
-
-        .group-create-content .selected-member .remove-member {
-            cursor: pointer;
-            opacity: 0.7;
-            font-size: 0.9rem;
-        }
-
-        .group-create-content .selected-member .remove-member:hover {
-            opacity: 1;
-        }
-
-        .group-create-content .contacts-select {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .group-create-content .contact-select-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .group-create-content .contact-select-item:hover {
-            background: var(--bg-card);
-            border-color: var(--border-color);
-        }
-
-        .group-create-content .contact-select-item.selected {
-            background: rgba(58, 96, 144, 0.2);
-            border-color: var(--accent);
-        }
-
-        .group-create-content .contact-select-item .checkbox {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-
-        .group-create-content .contact-select-item.selected .checkbox {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .group-create-content .contact-select-item.selected .checkbox::after {
-            content: '✓';
-            color: white;
-            font-size: 0.7rem;
-        }
-
-        .group-create-content .contact-select-item .contact-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--bg-card);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .group-create-content .create-group-btn {
-            width: 100%;
-            padding: 14px;
-            background: var(--accent);
-            border: none;
-            border-radius: 60px;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 16px;
-        }
-
-        .group-create-content .create-group-btn:hover {
-            background: var(--accent-hover);
-            transform: scale(1.02);
-        }
-
-        .group-create-content .create-group-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
         }
 
         .bottom-nav {
@@ -1009,9 +824,6 @@
             .modal-content {
                 padding: 20px 16px;
             }
-            .group-create-content {
-                padding: 20px 16px;
-            }
             .chat-message {
                 max-width: 90%;
                 font-size: 0.85rem;
@@ -1028,19 +840,17 @@
                 <img src="https://github.com/tvink001v-ops/ghost/blob/main/%D0%91%D0%B5%D0%B7%20%D0%BD%D0%B0%D0%B7%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F28_20260729001722.png?raw=true" alt="Ghost Logo" />
             </div>
             <h1>GHOST</h1>
-            <div class="online-count">🟢 Онлайн</div>
+            <div class="connection-status" id="connectionStatus">🔗 Подключение...</div>
         </header>
 
         <div id="feedContainer" class="feed">
             <div class="empty-state">Нет заданий. Создайте первое!</div>
         </div>
 
-        <!-- Личный чат -->
+        <!-- Чат -->
         <div class="chat-section" id="chatSection">
             <div class="chat-header">
-                <div class="chat-avatar" id="chatAvatar">
-                    <span id="chatAvatarEmoji">👤</span>
-                </div>
+                <div class="chat-avatar" id="chatAvatar">👤</div>
                 <div class="chat-info">
                     <div class="chat-name" id="chatPartnerName">Собеседник</div>
                     <div class="chat-status" id="chatStatus">🟢 онлайн</div>
@@ -1054,37 +864,32 @@
             </div>
         </div>
 
-        <!-- Групповой чат -->
-        <div class="group-chat-section" id="groupChatSection">
-            <div class="chat-header">
-                <div class="chat-avatar" id="groupChatAvatar">
-                    <img src="https://github.com/tvink001v-ops/ghost/blob/main/5692057.png?raw=true" alt="Группа" onerror="this.style.display='none'; this.parentElement.textContent='👥'" />
-                </div>
-                <div class="chat-info">
-                    <div class="chat-name" id="groupChatName">Группа</div>
-                    <div class="chat-status" id="groupChatStatus">👥 0 участников</div>
-                </div>
-                <button class="close-chat" id="closeGroupChatBtn">✕</button>
-            </div>
-            <div class="chat-messages" id="groupChatMessages"></div>
-            <div class="chat-input-group">
-                <input type="text" id="groupChatInput" placeholder="Напиши сообщение..." maxlength="500" />
-                <button id="groupChatSendBtn">📨</button>
-            </div>
-        </div>
-
         <!-- Вкладка Аккаунт -->
         <div id="accountTab" class="account-tab">
             <div class="account-header">
-                <h2>Создать задание</h2>
+                <h2>Аккаунт</h2>
             </div>
 
             <div class="user-info">
-                <span>👤 <strong id="userNameDisplay"></strong></span>
-                <span class="user-id" id="userIdDisplay"></span>
+                <div class="user-row">
+                    <span>👤 <strong id="userNameDisplay"></strong></span>
+                    <span class="peer-id" id="peerIdDisplay" title="Нажми чтобы скопировать">📋 ID</span>
+                </div>
+                <div class="user-row" style="font-size: 0.7rem; color: var(--text-muted);">
+                    <span>Подключено: <span id="connectedCount">0</span></span>
+                </div>
+            </div>
+
+            <div class="connect-section">
+                <label>🔗 Подключиться к пользователю</label>
+                <div class="input-group">
+                    <input type="text" id="connectInput" placeholder="Введите Peer ID..." />
+                    <button id="connectBtn">Подключиться</button>
+                </div>
             </div>
 
             <form id="createTaskForm" class="create-form">
+                <h3 style="font-weight: 400; font-size: 1.2rem; margin-bottom: 12px; color: var(--text-secondary);">📝 Создать задание</h3>
                 <div class="form-group">
                     <label for="taskPhoto">Фото задания <span class="optional">(не обязательно)</span></label>
                     <input type="file" id="taskPhoto" accept="image/*" />
@@ -1120,17 +925,9 @@
 
         <!-- Вкладка Чаты -->
         <div id="chatsTab" style="display: none;">
-            <h2 style="margin-bottom: 12px;">👥 Пользователи</h2>
-
-            <button id="showGroupCreateBtn" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:16px; color:white; font-size:1rem; cursor:pointer; margin-bottom:16px; transition: all 0.2s;">
-                ➕ Создать группу
-            </button>
-
-            <div class="contacts-list" id="contactsContainer"></div>
-
-            <div style="margin-top: 16px;">
-                <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">📢 Групповые чаты</h3>
-                <div id="groupChatsList"></div>
+            <h2 style="margin-bottom: 12px;">👥 Подключения</h2>
+            <div id="connectionsList">
+                <div class="empty-state">Нет подключений. Подключитесь к кому-нибудь через вкладку "Аккаунт"</div>
             </div>
         </div>
 
@@ -1144,26 +941,6 @@
                 <button class="respond-btn" id="modalRespondBtn">📩 Откликнуться</button>
                 <button class="delete-btn" id="modalDeleteBtn">🗑️ Удалить</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Модалка создания группы -->
-    <div class="group-create-modal" id="groupCreateModal">
-        <div class="group-create-content">
-            <div class="modal-header">
-                <h2>👥 Новая группа</h2>
-                <button class="close-modal" id="closeGroupModal">✕</button>
-            </div>
-
-            <input type="text" class="group-name-input" id="newGroupName" placeholder="Название группы..." />
-
-            <div class="selected-members" id="selectedMembers">
-                <span style="color: var(--text-muted); font-size: 0.8rem;">Выберите участников...</span>
-            </div>
-
-            <div class="contacts-select" id="contactsSelect"></div>
-
-            <button class="create-group-btn" id="createGroupBtn" disabled>Создать группу</button>
         </div>
     </div>
 
@@ -1193,16 +970,12 @@
 
     <script>
         (function() {
-            // --- СОСТОЯНИЕ ---
+            // --- PEERJS ---
+            let peer = null;
+            let connections = {}; // { peerId: connection }
             let tasks = [];
-            let privateChats = {};
-            let groupChats = {};
-            let userId = 'user_' + Math.random().toString(36).substr(2, 6);
             let userName = 'Аноним';
-            let selectedContacts = [];
-            let currentModalId = null;
-            let currentChatId = null;
-            let currentGroupId = null;
+            let userId = '';
 
             // --- DOM ---
             const feedContainer = document.getElementById('feedContainer');
@@ -1227,501 +1000,221 @@
             const closeChatBtn = document.getElementById('closeChatBtn');
             const chatPartnerName = document.getElementById('chatPartnerName');
             const chatStatus = document.getElementById('chatStatus');
-            const chatAvatarEmoji = document.getElementById('chatAvatarEmoji');
-            const groupChatSection = document.getElementById('groupChatSection');
-            const groupChatMessages = document.getElementById('groupChatMessages');
-            const groupChatInput = document.getElementById('groupChatInput');
-            const groupChatSendBtn = document.getElementById('groupChatSendBtn');
-            const closeGroupChatBtn = document.getElementById('closeGroupChatBtn');
-            const groupChatName = document.getElementById('groupChatName');
-            const groupChatStatus = document.getElementById('groupChatStatus');
-            const contactsContainer = document.getElementById('contactsContainer');
-            const groupChatsList = document.getElementById('groupChatsList');
+            const chatAvatar = document.getElementById('chatAvatar');
             const chatBadge = document.getElementById('chatBadge');
-            const showGroupCreateBtn = document.getElementById('showGroupCreateBtn');
-            const groupCreateModal = document.getElementById('groupCreateModal');
-            const closeGroupModal = document.getElementById('closeGroupModal');
-            const newGroupName = document.getElementById('newGroupName');
-            const selectedMembers = document.getElementById('selectedMembers');
-            const contactsSelect = document.getElementById('contactsSelect');
-            const createGroupBtn = document.getElementById('createGroupBtn');
             const userNameDisplay = document.getElementById('userNameDisplay');
-            const userIdDisplay = document.getElementById('userIdDisplay');
+            const peerIdDisplay = document.getElementById('peerIdDisplay');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const connectInput = document.getElementById('connectInput');
+            const connectBtn = document.getElementById('connectBtn');
+            const connectionsList = document.getElementById('connectionsList');
+            const connectedCount = document.getElementById('connectedCount');
 
-            // --- ЗАГРУЗКА ДАННЫХ ---
-            function loadData() {
-                try {
-                    const storedName = localStorage.getItem('ghost_username_v11');
-                    if (storedName) {
-                        userName = storedName;
+            // --- ИНИЦИАЛИЗАЦИЯ PEERJS ---
+            function initPeer() {
+                // Генерируем случайный ID
+                userId = 'ghost-' + Math.random().toString(36).substr(2, 8);
+                
+                peer = new Peer(userId, {
+                    debug: 2
+                });
+
+                peer.on('open', function(id) {
+                    console.log('✅ Peer открыт! ID:', id);
+                    userId = id;
+                    peerIdDisplay.textContent = '📋 ' + id;
+                    peerIdDisplay.title = 'Нажми чтобы скопировать ID';
+                    updateConnectionStatus('connected');
+                    showToast('✅ Подключено! Твой ID: ' + id);
+                    
+                    // Загружаем сохранённые данные
+                    loadLocalData();
+                });
+
+                peer.on('connection', function(conn) {
+                    console.log('📥 Входящее соединение от:', conn.peer);
+                    connections[conn.peer] = conn;
+                    setupConnection(conn);
+                    updateConnectionsList();
+                    showToast('🔗 Подключился ' + conn.peer);
+                });
+
+                peer.on('disconnected', function() {
+                    console.log('⚠️ Peer отключился');
+                    updateConnectionStatus('disconnected');
+                    showToast('⚠️ Соединение потеряно. Переподключаемся...');
+                    peer.reconnect();
+                });
+
+                peer.on('error', function(err) {
+                    console.error('❌ Ошибка PeerJS:', err);
+                    if (err.type === 'unavailable-id') {
+                        // Если ID занят, генерируем новый
+                        userId = 'ghost-' + Math.random().toString(36).substr(2, 8);
+                        peer.destroy();
+                        initPeer();
+                    } else {
+                        updateConnectionStatus('disconnected');
+                        showToast('❌ Ошибка: ' + err.message);
                     }
-                    userNameDisplay.textContent = userName;
-                    userIdDisplay.textContent = 'ID: ' + userId.substr(0, 8);
+                });
 
-                    const storedTasks = localStorage.getItem('ghost_tasks_v11');
+                // Копирование ID по клику
+                peerIdDisplay.addEventListener('click', function() {
+                    navigator.clipboard.writeText(userId).then(() => {
+                        showToast('📋 ID скопирован!');
+                    }).catch(() => {
+                        // Fallback
+                        const range = document.createRange();
+                        range.selectNode(peerIdDisplay);
+                        window.getSelection().removeAllRanges();
+                        window.getSelection().addRange(range);
+                        document.execCommand('copy');
+                        showToast('📋 ID скопирован!');
+                    });
+                });
+            }
+
+            // --- НАСТРОЙКА СОЕДИНЕНИЯ ---
+            function setupConnection(conn) {
+                conn.on('data', function(data) {
+                    console.log('📨 Получено:', data);
+                    handleIncomingData(data, conn.peer);
+                });
+
+                conn.on('close', function() {
+                    console.log('🔌 Соединение закрыто:', conn.peer);
+                    delete connections[conn.peer];
+                    updateConnectionsList();
+                    showToast('🔌 Отключился ' + conn.peer);
+                });
+
+                conn.on('error', function(err) {
+                    console.error('❌ Ошибка соединения:', err);
+                });
+            }
+
+            // --- ПОДКЛЮЧЕНИЕ К ДРУГОМУ ПОЛЬЗОВАТЕЛЮ ---
+            function connectToPeer(peerId) {
+                if (connections[peerId]) {
+                    showToast('⚠️ Уже подключены к ' + peerId);
+                    return;
+                }
+
+                if (!peer) {
+                    showToast('❌ Peer не инициализирован');
+                    return;
+                }
+
+                const conn = peer.connect(peerId);
+                connections[peerId] = conn;
+                setupConnection(conn);
+                updateConnectionsList();
+                showToast('🔗 Подключение к ' + peerId + '...');
+            }
+
+            // --- ОБРАБОТКА ВХОДЯЩИХ ДАННЫХ ---
+            function handleIncomingData(data, fromPeer) {
+                // Задания
+                if (data.type === 'task') {
+                    const task = data.payload;
+                    // Проверяем, есть ли уже такое задание
+                    if (!tasks.find(t => t.id === task.id && t.from === fromPeer)) {
+                        task.from = fromPeer;
+                        tasks.push(task);
+                        saveLocalData();
+                        renderFeed();
+                        updateTaskCount();
+                        showToast('📋 Новое задание от ' + (task.author || 'Аноним'));
+                    }
+                }
+
+                // Чат-сообщение
+                if (data.type === 'chat') {
+                    const msg = data.payload;
+                    // Если чат открыт с этим пользователем
+                    if (currentChatPeer === fromPeer) {
+                        renderChatMessage(msg.text, msg.time, false);
+                    } else {
+                        // Уведомление о новом сообщении
+                        showToast('💬 Новое сообщение от ' + fromPeer);
+                        chatBadge.style.display = 'block';
+                        // Сохраняем в локальный чат
+                        if (!localChats[fromPeer]) localChats[fromPeer] = [];
+                        localChats[fromPeer].push({ text: msg.text, time: msg.time, from: fromPeer });
+                        saveLocalChats();
+                    }
+                }
+            }
+
+            // --- ОТПРАВКА ДАННЫХ ---
+            function sendToAll(data) {
+                for (const peerId in connections) {
+                    try {
+                        connections[peerId].send(data);
+                    } catch (e) {
+                        console.error('Ошибка отправки:', e);
+                    }
+                }
+            }
+
+            function sendToPeer(peerId, data) {
+                if (connections[peerId]) {
+                    try {
+                        connections[peerId].send(data);
+                    } catch (e) {
+                        console.error('Ошибка отправки:', e);
+                        showToast('❌ Не удалось отправить');
+                    }
+                }
+            }
+
+            // --- ЛОКАЛЬНОЕ ХРАНЕНИЕ ---
+            let localChats = {};
+            let currentChatPeer = null;
+
+            function loadLocalData() {
+                try {
+                    const storedTasks = localStorage.getItem('ghost_p2p_tasks');
                     if (storedTasks) {
                         tasks = JSON.parse(storedTasks);
                     } else {
                         tasks = [];
-                        saveTasks();
                     }
 
-                    const storedPrivate = localStorage.getItem('ghost_private_chats_v11');
-                    if (storedPrivate) {
-                        privateChats = JSON.parse(storedPrivate);
-                    } else {
-                        privateChats = {};
-                        savePrivateChats();
+                    const storedName = localStorage.getItem('ghost_p2p_name');
+                    if (storedName) {
+                        userName = storedName;
+                        userNameDisplay.textContent = userName;
                     }
 
-                    const storedGroup = localStorage.getItem('ghost_group_chats_v11');
-                    if (storedGroup) {
-                        groupChats = JSON.parse(storedGroup);
+                    const storedChats = localStorage.getItem('ghost_p2p_chats');
+                    if (storedChats) {
+                        localChats = JSON.parse(storedChats);
                     } else {
-                        const defaultGroupId = 'group_' + Date.now();
-                        groupChats = {
-                            [defaultGroupId]: {
-                                name: 'Общий чат',
-                                members: [userId],
-                                messages: [
-                                    { text: 'Добро пожаловать в общий чат! 👻', time: Date.now(), from: 'system' }
-                                ]
-                            }
-                        };
-                        saveGroupChats();
+                        localChats = {};
                     }
 
                 } catch (e) {
-                    console.error('Ошибка загрузки:', e);
                     tasks = [];
-                    privateChats = {};
-                    groupChats = {};
+                    localChats = {};
                 }
-                updateUI();
-                renderContacts();
-                renderGroupChatsList();
-            }
-
-            function saveTasks() {
-                try { localStorage.setItem('ghost_tasks_v11', JSON.stringify(tasks)); } catch (e) {}
-            }
-
-            function savePrivateChats() {
-                try { localStorage.setItem('ghost_private_chats_v11', JSON.stringify(privateChats)); } catch (e) {}
-            }
-
-            function saveGroupChats() {
-                try { localStorage.setItem('ghost_group_chats_v11', JSON.stringify(groupChats)); } catch (e) {}
-            }
-
-            function updateUI() {
                 renderFeed();
                 updateTaskCount();
-                updateChatBadge();
-                updateGroupStatus();
+                updateConnectionsList();
             }
 
-            function updateGroupStatus() {
-                if (currentGroupId && groupChats[currentGroupId]) {
-                    groupChatStatus.textContent = `👥 ${groupChats[currentGroupId].members.length} участников`;
-                }
+            function saveLocalData() {
+                try {
+                    localStorage.setItem('ghost_p2p_tasks', JSON.stringify(tasks));
+                    localStorage.setItem('ghost_p2p_name', userName);
+                } catch (e) {}
             }
 
-            // --- ПОЛУЧЕНИЕ РЕАЛЬНЫХ ПОЛЬЗОВАТЕЛЕЙ ---
-            function getRealUsers() {
-                const users = [];
-                const userIds = new Set();
-
-                tasks.forEach(task => {
-                    if (task.authorId && task.authorId !== userId && !userIds.has(task.authorId)) {
-                        userIds.add(task.authorId);
-                        users.push({
-                            id: task.authorId,
-                            name: task.author || 'Аноним',
-                            tasksCount: tasks.filter(t => t.authorId === task.authorId).length
-                        });
-                    }
-                });
-
-                for (const groupId in groupChats) {
-                    const group = groupChats[groupId];
-                    group.members.forEach(memberId => {
-                        if (memberId !== userId && !userIds.has(memberId)) {
-                            userIds.add(memberId);
-                            const taskAuthor = tasks.find(t => t.authorId === memberId);
-                            users.push({
-                                id: memberId,
-                                name: taskAuthor ? taskAuthor.author : 'Пользователь',
-                                tasksCount: tasks.filter(t => t.authorId === memberId).length
-                            });
-                        }
-                    });
-                }
-
-                for (const chatId in privateChats) {
-                    if (chatId.startsWith('contact_')) {
-                        const contactId = chatId.replace('contact_', '');
-                        if (contactId !== userId && !userIds.has(contactId)) {
-                            userIds.add(contactId);
-                            const taskAuthor = tasks.find(t => t.authorId === contactId);
-                            users.push({
-                                id: contactId,
-                                name: taskAuthor ? taskAuthor.author : 'Пользователь',
-                                tasksCount: tasks.filter(t => t.authorId === contactId).length
-                            });
-                        }
-                    }
-                }
-
-                return users;
-            }
-
-            function getUserById(id) {
-                const users = getRealUsers();
-                return users.find(u => u.id === id);
-            }
-
-            // --- РЕНДЕР КОНТАКТОВ ---
-            function renderContacts() {
-                if (!contactsContainer) return;
-                contactsContainer.innerHTML = '';
-                const users = getRealUsers();
-
-                if (users.length === 0) {
-                    contactsContainer.innerHTML = `
-                        <div class="empty-state" style="padding: 20px 0;">
-                            👻 Пока нет других пользователей.<br>
-                            Создай задание, и другие смогут с тобой связаться!
-                        </div>
-                    `;
-                    return;
-                }
-
-                users.forEach(user => {
-                    const div = document.createElement('div');
-                    div.className = 'contact-item';
-                    const avatarLetter = user.name.charAt(0).toUpperCase();
-                    div.innerHTML = `
-                        <div class="contact-info">
-                            <div class="contact-avatar">${avatarLetter}</div>
-                            <div>
-                                <div class="contact-name">${escapeHtml(user.name)}</div>
-                                <div class="contact-status">🟢 онлайн • ${user.tasksCount} заданий</div>
-                            </div>
-                        </div>
-                        <button class="invite-btn" data-contact-id="${user.id}">💬 Чат</button>
-                    `;
-                    const chatBtn = div.querySelector('.invite-btn');
-                    chatBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const chatId = 'contact_' + user.id;
-                        if (!privateChats[chatId]) privateChats[chatId] = [];
-                        openPrivateChat(chatId, user.name);
-                    });
-                    contactsContainer.appendChild(div);
-                });
-            }
-
-            // --- РЕНДЕР ГРУППОВЫХ ЧАТОВ ---
-            function renderGroupChatsList() {
-                if (!groupChatsList) return;
-                groupChatsList.innerHTML = '';
-                const groupIds = Object.keys(groupChats);
-                if (groupIds.length === 0) {
-                    groupChatsList.innerHTML = '<div class="empty-state">Нет групповых чатов</div>';
-                    return;
-                }
-                groupIds.forEach(groupId => {
-                    const group = groupChats[groupId];
-                    const div = document.createElement('div');
-                    div.className = 'contact-item';
-                    div.innerHTML = `
-                        <div class="contact-info">
-                            <div class="contact-avatar" style="background: var(--purple);">👥</div>
-                            <div>
-                                <div class="contact-name">${escapeHtml(group.name)}</div>
-                                <div class="contact-status">${group.members.length} участников</div>
-                            </div>
-                        </div>
-                        <button class="invite-btn" data-group-id="${groupId}">💬 Открыть</button>
-                    `;
-                    const openBtn = div.querySelector('.invite-btn');
-                    openBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openGroupChat(groupId);
-                    });
-                    groupChatsList.appendChild(div);
-                });
-            }
-
-            // --- ОТКРЫТЬ ЛИЧНЫЙ ЧАТ ---
-            function openPrivateChat(chatId, partnerName) {
-                currentChatId = chatId;
-                currentGroupId = null;
-                chatPartnerName.textContent = partnerName || 'Собеседник';
-                chatStatus.textContent = '🟢 онлайн';
-                chatAvatarEmoji.textContent = partnerName ? partnerName.charAt(0).toUpperCase() : '👤';
-                chatSection.classList.add('active');
-                groupChatSection.classList.remove('active');
-                renderPrivateChatMessages(chatId);
-                chatInput.focus();
-                if (privateChats[chatId]) {
-                    privateChats[chatId].forEach(msg => { if (msg.from !== userId) msg.read = true; });
-                    savePrivateChats();
-                    updateChatBadge();
-                }
-            }
-
-            function renderPrivateChatMessages(chatId) {
-                if (!privateChats[chatId]) privateChats[chatId] = [];
-                chatMessages.innerHTML = '';
-                privateChats[chatId].forEach(msg => {
-                    const div = document.createElement('div');
-                    div.className = 'chat-message';
-                    if (msg.from === userId) {
-                        div.classList.add('own');
-                    } else {
-                        div.classList.add('other');
-                    }
-                    const time = new Date(msg.time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                    div.innerHTML = `${escapeHtml(msg.text)} <span class="msg-time">${time}</span>`;
-                    chatMessages.appendChild(div);
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function sendPrivateMessage() {
-                const text = chatInput.value.trim();
-                if (!text || currentChatId === null) return;
-                if (!privateChats[currentChatId]) privateChats[currentChatId] = [];
-                privateChats[currentChatId].push({ text, time: Date.now(), from: userId, read: false });
-                savePrivateChats();
-                renderPrivateChatMessages(currentChatId);
-                chatInput.value = '';
-                updateChatBadge();
-            }
-
-            // --- ГРУППОВЫЕ ЧАТЫ ---
-            function openGroupChat(groupId) {
-                currentGroupId = groupId;
-                currentChatId = null;
-                const group = groupChats[groupId];
-                if (!group) return;
-                groupChatName.textContent = group.name;
-                groupChatStatus.textContent = `👥 ${group.members.length} участников`;
-                groupChatSection.classList.add('active');
-                chatSection.classList.remove('active');
-                renderGroupChatMessages(groupId);
-                groupChatInput.focus();
-                group.messages.forEach(msg => { if (msg.from !== userId && msg.from !== 'system') msg.read = true; });
-                saveGroupChats();
-                updateChatBadge();
-            }
-
-            function renderGroupChatMessages(groupId) {
-                const group = groupChats[groupId];
-                if (!group) return;
-                groupChatMessages.innerHTML = '';
-                group.messages.forEach(msg => {
-                    const div = document.createElement('div');
-                    div.className = 'chat-message';
-                    if (msg.from === userId) {
-                        div.classList.add('own');
-                    } else if (msg.from === 'system') {
-                        div.classList.add('system');
-                    } else {
-                        div.classList.add('other');
-                    }
-                    const sender = msg.from === 'system' ? '' : (msg.from === userId ? 'Вы' : (getUserById(msg.from)
-                        ?.name || 'Контакт'));
-                    const time = new Date(msg.time).toLocaleTimeString('ru-RU', { hour: '2-digit',
-                    minute: '2-digit' });
-                    div.innerHTML = `${sender ? sender + ': ' : ''}${escapeHtml(msg.text)} <span class="msg-time">${time}</span>`;
-                    groupChatMessages.appendChild(div);
-                });
-                groupChatMessages.scrollTop = groupChatMessages.scrollHeight;
-            }
-
-            function sendGroupMessage() {
-                const text = groupChatInput.value.trim();
-                if (!text || currentGroupId === null) return;
-                const group = groupChats[currentGroupId];
-                if (!group) return;
-                group.messages.push({ text, time: Date.now(), from: userId, read: false });
-                saveGroupChats();
-                renderGroupChatMessages(currentGroupId);
-                groupChatInput.value = '';
-                updateChatBadge();
-            }
-
-            // --- СОЗДАНИЕ ГРУППЫ ---
-            function openGroupCreateModal() {
-                selectedContacts = [];
-                groupCreateModal.classList.add('active');
-                renderContactsSelect();
-                updateSelectedMembers();
-                newGroupName.value = '';
-                createGroupBtn.disabled = true;
-                newGroupName.focus();
-            }
-
-            function closeGroupCreateModal() {
-                groupCreateModal.classList.remove('active');
-                selectedContacts = [];
-            }
-
-            function renderContactsSelect() {
-                contactsSelect.innerHTML = '';
-                const users = getRealUsers();
-                if (users.length === 0) {
-                    contactsSelect.innerHTML =
-                        '<div class="empty-state">Нет других пользователей. Создайте задание, чтобы появиться в списке!</div>';
-                    return;
-                }
-                users.forEach(user => {
-                    const isSelected = selectedContacts.some(c => c.id === user.id);
-                    const div = document.createElement('div');
-                    div.className = `contact-select-item ${isSelected ? 'selected' : ''}`;
-                    const avatarLetter = user.name.charAt(0).toUpperCase();
-                    div.innerHTML = `
-                        <div class="checkbox"></div>
-                        <div class="contact-avatar">${avatarLetter}</div>
-                        <div>
-                            <div style="color: var(--text-secondary);">${escapeHtml(user.name)}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">${user.tasksCount} заданий</div>
-                        </div>
-                    `;
-                    div.addEventListener('click', () => {
-                        const index = selectedContacts.findIndex(c => c.id === user.id);
-                        if (index === -1) {
-                            selectedContacts.push(user);
-                        } else {
-                            selectedContacts.splice(index, 1);
-                        }
-                        renderContactsSelect();
-                        updateSelectedMembers();
-                    });
-                    contactsSelect.appendChild(div);
-                });
-            }
-
-            function updateSelectedMembers() {
-                selectedMembers.innerHTML = '';
-                if (selectedContacts.length === 0) {
-                    selectedMembers.innerHTML =
-                        '<span style="color: var(--text-muted); font-size: 0.8rem;">Выберите участников...</span>';
-                    createGroupBtn.disabled = true;
-                    return;
-                }
-                selectedContacts.forEach(user => {
-                    const span = document.createElement('span');
-                    span.className = 'selected-member';
-                    span.innerHTML = `
-                        ${escapeHtml(user.name)}
-                        <span class="remove-member" data-id="${user.id}">✕</span>
-                    `;
-                    const removeBtn = span.querySelector('.remove-member');
-                    removeBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        selectedContacts = selectedContacts.filter(c => c.id !== user.id);
-                        renderContactsSelect();
-                        updateSelectedMembers();
-                    });
-                    selectedMembers.appendChild(span);
-                });
-                createGroupBtn.disabled = false;
-            }
-
-            function createGroup() {
-                const name = newGroupName.value.trim() || 'Новая группа';
-                const groupId = 'group_' + Date.now();
-                const members = [userId, ...selectedContacts.map(c => c.id)];
-                groupChats[groupId] = {
-                    name: name,
-                    members: members,
-                    messages: [
-                        { text: `Группа "${name}" создана! Участников: ${members.length} 👻`, time: Date.now(),
-                            from: 'system' }
-                    ]
-                };
-                saveGroupChats();
-                closeGroupCreateModal();
-                renderGroupChatsList();
-                updateGroupStatus();
-                showToast(`✅ Группа "${name}" создана!`);
-                openGroupChat(groupId);
-            }
-
-            // --- ЗАКРЫТЬ ЧАТЫ ---
-            function closeChat() {
-                chatSection.classList.remove('active');
-                groupChatSection.classList.remove('active');
-                currentChatId = null;
-                currentGroupId = null;
-            }
-
-            // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
-            function openDetail(taskId) {
-                const task = tasks.find(t => t.id === taskId);
-                if (!task) return;
-                currentModalId = taskId;
-                modalImage.src = task.image ||
-                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220"%3E%3Crect width="400" height="220" fill="%23141b24"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%237b8aa3" text-anchor="middle" dy=".3em"%3E📚 Без фото%3C/text%3E%3C/svg%3E';
-                modalMainText.textContent = task.mainText || 'Без названия';
-                modalDetailText.textContent = task.detailText || 'Подробное описание отсутствует.';
-                modalOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeDetail() {
-                modalOverlay.classList.remove('active');
-                document.body.style.overflow = '';
-                currentModalId = null;
-            }
-
-            function switchTab(tab) {
-                closeChat();
-                if (tab === 'feed') {
-                    feedContainer.style.display = 'flex';
-                    accountTab.style.display = 'none';
-                    chatsTab.style.display = 'none';
-                    navFeed.classList.add('active');
-                    navAccount.classList.remove('active');
-                    navChats.classList.remove('active');
-                    renderFeed();
-                } else if (tab === 'account') {
-                    feedContainer.style.display = 'none';
-                    accountTab.style.display = 'flex';
-                    chatsTab.style.display = 'none';
-                    navAccount.classList.add('active');
-                    navFeed.classList.remove('active');
-                    navChats.classList.remove('active');
-                } else if (tab === 'chats') {
-                    feedContainer.style.display = 'none';
-                    accountTab.style.display = 'none';
-                    chatsTab.style.display = 'block';
-                    navChats.classList.add('active');
-                    navFeed.classList.remove('active');
-                    navAccount.classList.remove('active');
-                    renderContacts();
-                    renderGroupChatsList();
-                }
-            }
-
-            function escapeHtml(unsafe) {
-                if (!unsafe) return '';
-                return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
-            }
-
-            function showToast(message) {
-                const existing = document.querySelector('.toast');
-                if (existing) existing.remove();
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.textContent = message;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
+            function saveLocalChats() {
+                try {
+                    localStorage.setItem('ghost_p2p_chats', JSON.stringify(localChats));
+                } catch (e) {}
             }
 
             // --- РЕНДЕР ЛЕНТЫ ---
@@ -1742,7 +1235,7 @@
                     const name = { 'study': 'Учёба', 'help': 'Помощь', 'event': 'Мероприятие', 'secret': 'Секретное',
                         'shop': 'Покупки', 'sport': 'Спорт', 'tech': 'Техника', 'other': 'Другое' } [task.category] ||
                         'Другое';
-                    const chatCount = privateChats[task.id] ? privateChats[task.id].length : 0;
+                    const from = task.from ? task.from.substr(0, 8) : 'локальное';
                     card.innerHTML = `
                         ${imageHtml}
                         <h3>${escapeHtml(task.mainText) || 'Без заголовка'}</h3>
@@ -1751,63 +1244,171 @@
                             <span>${emoji} ${name}</span>
                             <span>🕐 ${new Date(task.date).toLocaleDateString('ru-RU')}</span>
                             <span>👤 ${escapeHtml(task.author || 'Аноним')}</span>
-                            ${chatCount > 0 ? `<span>💬 ${chatCount}</span>` : ''}
                         </div>
                         <div class="category-badge">${emoji} ${name}</div>
+                        <div class="from-badge">📡 ${from}</div>
                     `;
-                    card.addEventListener('click', () => openDetail(task.id));
+                    card.addEventListener('click', () => openDetail(task));
                     feedContainer.appendChild(card);
                 });
             }
 
-            function updateTaskCount() { taskCount.textContent = tasks.length; }
-
-            function updateChatBadge() {
-                let hasNew = false;
-                for (const taskId in privateChats) {
-                    const msgs = privateChats[taskId];
-                    if (msgs.length > 0 && msgs[msgs.length - 1].from !== userId && !msgs[msgs.length - 1].read) { hasNew =
-                        true; break; }
-                }
-                if (!hasNew) {
-                    for (const groupId in groupChats) {
-                        const msgs = groupChats[groupId].messages;
-                        if (msgs.length > 0 && msgs[msgs.length - 1].from !== userId && msgs[msgs.length - 1].from !==
-                            'system' && !msgs[msgs.length - 1].read) { hasNew = true; break; }
-                    }
-                }
-                chatBadge.style.display = hasNew ? 'block' : 'none';
+            function updateTaskCount() {
+                taskCount.textContent = tasks.length;
             }
 
-            // --- ДОБАВЛЕНИЕ ЗАДАНИЯ ---
-            function addTask(taskName, mainText, detailText, imageDataUrl, category) {
-                const newTask = {
-                    id: Date.now(),
-                    image: imageDataUrl || '',
-                    author: taskName || 'Аноним',
-                    authorId: userId,
-                    mainText: mainText,
-                    detailText: detailText || '',
-                    category: category || 'other',
-                    date: new Date().toISOString()
-                };
-                tasks.push(newTask);
-                saveTasks();
-                updateUI();
-                createForm.reset();
-                switchTab('feed');
-                showToast('✅ Задание опубликовано!');
+            // --- ОТКРЫТЬ ДЕТАЛИ ---
+            function openDetail(task) {
+                modalImage.src = task.image ||
+                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220"%3E%3Crect width="400" height="220" fill="%23141b24"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%237b8aa3" text-anchor="middle" dy=".3em"%3E📚 Без фото%3C/text%3E%3C/svg%3E';
+                modalMainText.textContent = task.mainText || 'Без названия';
+                modalDetailText.textContent = task.detailText || 'Подробное описание отсутствует.';
+                modalOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                
+                // Сохраняем задание для отклика
+                modalOverlay.dataset.taskId = task.id;
+                modalOverlay.dataset.taskFrom = task.from || '';
             }
 
-            function deleteTask(taskId) {
-                if (confirm('🗑️ Удалить это задание?')) {
-                    tasks = tasks.filter(t => t.id !== taskId);
-                    delete privateChats[taskId];
-                    saveTasks();
-                    savePrivateChats();
-                    updateUI();
-                    closeDetail();
-                    showToast('🗑️ Задание удалено');
+            function closeDetail() {
+                modalOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            // --- ОТКРЫТЬ ЧАТ ---
+            function openChat(peerId, peerName) {
+                currentChatPeer = peerId;
+                chatPartnerName.textContent = peerName || peerId.substr(0, 8);
+                chatAvatar.textContent = (peerName || '?').charAt(0).toUpperCase();
+                chatSection.classList.add('active');
+                
+                // Загружаем историю чата
+                chatMessages.innerHTML = '';
+                if (localChats[peerId]) {
+                    localChats[peerId].forEach(msg => {
+                        const isOwn = msg.from === userId;
+                        renderChatMessage(msg.text, msg.time, isOwn);
+                    });
+                }
+                chatInput.focus();
+            }
+
+            function renderChatMessage(text, time, isOwn) {
+                const div = document.createElement('div');
+                div.className = 'chat-message';
+                if (isOwn) div.classList.add('own');
+                const timeStr = new Date(time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                div.innerHTML = `${escapeHtml(text)} <span class="msg-time">${timeStr}</span>`;
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function sendChatMessage() {
+                const text = chatInput.value.trim();
+                if (!text || !currentChatPeer) return;
+
+                // Сохраняем локально
+                if (!localChats[currentChatPeer]) localChats[currentChatPeer] = [];
+                localChats[currentChatPeer].push({ text, time: Date.now(), from: userId });
+                saveLocalChats();
+
+                // Отображаем
+                renderChatMessage(text, Date.now(), true);
+                chatInput.value = '';
+
+                // Отправляем собеседнику
+                sendToPeer(currentChatPeer, {
+                    type: 'chat',
+                    payload: { text, time: Date.now() }
+                });
+            }
+
+            // --- ОБНОВЛЕНИЕ СПИСКА ПОДКЛЮЧЕНИЙ ---
+            function updateConnectionsList() {
+                const peerIds = Object.keys(connections);
+                connectedCount.textContent = peerIds.length;
+                
+                if (peerIds.length === 0) {
+                    connectionsList.innerHTML = `<div class="empty-state">Нет подключений. Подключитесь к кому-нибудь через вкладку "Аккаунт"</div>`;
+                    return;
+                }
+                
+                connectionsList.innerHTML = '';
+                peerIds.forEach(peerId => {
+                    const div = document.createElement('div');
+                    div.className = 'contact-item';
+                    const name = localChats[peerId]?.[0]?.from || peerId.substr(0, 8);
+                    div.innerHTML = `
+                        <div class="contact-info">
+                            <div class="contact-avatar">${name.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="contact-name">${escapeHtml(name)}</div>
+                                <div class="contact-status">🟢 онлайн</div>
+                            </div>
+                        </div>
+                        <button class="invite-btn" data-peer="${peerId}">💬 Чат</button>
+                    `;
+                    const btn = div.querySelector('.invite-btn');
+                    btn.addEventListener('click', () => {
+                        openChat(peerId, name);
+                    });
+                    connectionsList.appendChild(div);
+                });
+            }
+
+            function updateConnectionStatus(status) {
+                if (status === 'connected') {
+                    connectionStatus.className = 'connection-status';
+                    connectionStatus.innerHTML = '🟢 Онлайн';
+                } else {
+                    connectionStatus.className = 'connection-status disconnected';
+                    connectionStatus.innerHTML = '🔴 Офлайн';
+                }
+            }
+
+            // --- ВСПОМОГАТЕЛЬНЫЕ ---
+            function escapeHtml(unsafe) {
+                if (!unsafe) return '';
+                return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            function showToast(message) {
+                const existing = document.querySelector('.toast');
+                if (existing) existing.remove();
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            function switchTab(tab) {
+                if (tab === 'feed') {
+                    feedContainer.style.display = 'flex';
+                    accountTab.classList.remove('active');
+                    chatsTab.style.display = 'none';
+                    navFeed.classList.add('active');
+                    navAccount.classList.remove('active');
+                    navChats.classList.remove('active');
+                    chatSection.classList.remove('active');
+                } else if (tab === 'account') {
+                    feedContainer.style.display = 'none';
+                    accountTab.classList.add('active');
+                    chatsTab.style.display = 'none';
+                    navAccount.classList.add('active');
+                    navFeed.classList.remove('active');
+                    navChats.classList.remove('active');
+                    chatSection.classList.remove('active');
+                } else if (tab === 'chats') {
+                    feedContainer.style.display = 'none';
+                    accountTab.classList.remove('active');
+                    chatsTab.style.display = 'block';
+                    navChats.classList.add('active');
+                    navFeed.classList.remove('active');
+                    navAccount.classList.remove('active');
+                    updateConnectionsList();
                 }
             }
 
@@ -1826,65 +1427,97 @@
                 if (!mainText) { showToast('Напишите, что нужно сделать.'); return; }
 
                 userName = taskName;
-                localStorage.setItem('ghost_username_v11', userName);
+                localStorage.setItem('ghost_p2p_name', userName);
                 userNameDisplay.textContent = userName;
 
                 const file = fileInput.files[0];
+                const processTask = function(imageData) {
+                    const task = {
+                        id: Date.now(),
+                        image: imageData || '',
+                        author: taskName,
+                        mainText: mainText,
+                        detailText: detailText || '',
+                        category: category || 'other',
+                        date: new Date().toISOString(),
+                        from: userId
+                    };
+                    
+                    // Сохраняем локально
+                    tasks.push(task);
+                    saveLocalData();
+                    renderFeed();
+                    updateTaskCount();
+                    createForm.reset();
+                    
+                    // Отправляем всем подключённым
+                    sendToAll({
+                        type: 'task',
+                        payload: task
+                    });
+                    
+                    switchTab('feed');
+                    showToast('✅ Задание опубликовано и отправлено!');
+                };
+
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(ev) {
-                        addTask(taskName, mainText, detailText, ev.target.result, category);
-                    };
-                    reader.onerror = function() {
-                        addTask(taskName, mainText, detailText, '', category);
-                    };
+                    reader.onload = function(ev) { processTask(ev.target.result); };
+                    reader.onerror = function() { processTask(''); };
                     reader.readAsDataURL(file);
                 } else {
-                    addTask(taskName, mainText, detailText, '', category);
+                    processTask('');
                 }
             });
 
+            // Подключение
+            connectBtn.addEventListener('click', function() {
+                const peerId = connectInput.value.trim();
+                if (peerId) {
+                    connectToPeer(peerId);
+                    connectInput.value = '';
+                } else {
+                    showToast('❌ Введите Peer ID');
+                }
+            });
+
+            connectInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') connectBtn.click();
+            });
+
+            // Модалка
+            modalCloseBtn.addEventListener('click', closeDetail);
+            modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeDetail(); });
+
             modalRespondBtn.addEventListener('click', function() {
-                if (currentModalId) {
-                    const task = tasks.find(t => t.id === currentModalId);
-                    if (task) {
-                        const chatId = 'contact_' + (task.authorId || 'unknown');
-                        if (!privateChats[chatId]) privateChats[chatId] = [];
-                        openPrivateChat(chatId, task.author || 'Автор');
-                        closeDetail();
-                        showToast('💬 Чат открыт! Напишите сообщение.');
-                    }
+                const from = modalOverlay.dataset.taskFrom;
+                if (from && connections[from]) {
+                    openChat(from, from.substr(0, 8));
+                    closeDetail();
+                    showToast('💬 Чат открыт!');
+                } else {
+                    showToast('❌ Автор задания не в сети');
                 }
             });
 
             modalDeleteBtn.addEventListener('click', function() {
-                if (currentModalId) {
-                    deleteTask(currentModalId);
+                const taskId = modalOverlay.dataset.taskId;
+                if (taskId) {
+                    tasks = tasks.filter(t => t.id != taskId);
+                    saveLocalData();
+                    renderFeed();
+                    updateTaskCount();
+                    closeDetail();
+                    showToast('🗑️ Задание удалено');
                 }
             });
 
-            modalCloseBtn.addEventListener('click', closeDetail);
-            modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeDetail(); });
-
             // Чат
-            chatSendBtn.addEventListener('click', sendPrivateMessage);
-            chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendPrivateMessage(); });
-            closeChatBtn.addEventListener('click', closeChat);
-
-            // Групповой чат
-            groupChatSendBtn.addEventListener('click', sendGroupMessage);
-            groupChatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendGroupMessage(); });
-            closeGroupChatBtn.addEventListener('click', closeChat);
-
-            // Создание группы
-            showGroupCreateBtn.addEventListener('click', openGroupCreateModal);
-            closeGroupModal.addEventListener('click', closeGroupCreateModal);
-            groupCreateModal.addEventListener('click', function(e) {
-                if (e.target === groupCreateModal) closeGroupCreateModal();
-            });
-            createGroupBtn.addEventListener('click', createGroup);
-            newGroupName.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !createGroupBtn.disabled) createGroup();
+            chatSendBtn.addEventListener('click', sendChatMessage);
+            chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendChatMessage(); });
+            closeChatBtn.addEventListener('click', function() {
+                chatSection.classList.remove('active');
+                currentChatPeer = null;
             });
 
             // Навигация
@@ -1893,12 +1526,11 @@
             navChats.addEventListener('click', () => switchTab('chats'));
 
             // --- ЗАПУСК ---
-            loadData();
+            initPeer();
             switchTab('feed');
 
-            console.log('👻 Ghost v11 загружен!');
-            console.log('🆔 Ваш ID:', userId);
-            console.log('👤 Ваше имя:', userName);
+            console.log('👻 Ghost P2P загружен!');
+            console.log('🔑 Используется библиотека PeerJS');
         })();
     </script>
 
