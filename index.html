@@ -779,7 +779,7 @@
         let chatTaskId = null;
         let chatMessages = [];
         let chatChannel = null;
-        let isChatSubscribed = false;
+        let chatAutoUpdateInterval = null;
 
         // Элементы
         const registerOverlay = document.getElementById('registerOverlay');
@@ -878,18 +878,69 @@
             }
         }
 
-        // ===== ЧАТ С ПОДПИСКОЙ =====
+        // ===== АВТООБНОВЛЕНИЕ ЧАТА =====
+        function startChatAutoUpdate() {
+            if (chatAutoUpdateInterval) {
+                clearInterval(chatAutoUpdateInterval);
+            }
+            chatAutoUpdateInterval = setInterval(() => {
+                if (chatTaskId && chatOverlay.classList.contains('open')) {
+                    refreshChatMessages();
+                }
+            }, 2000); // каждые 2 секунды
+        }
+
+        function stopChatAutoUpdate() {
+            if (chatAutoUpdateInterval) {
+                clearInterval(chatAutoUpdateInterval);
+                chatAutoUpdateInterval = null;
+            }
+        }
+
+        async function refreshChatMessages() {
+            if (!isConfigured || !chatTaskId) return;
+            
+            try {
+                const { data, error } = await supabase
+                    .from('chat_messages')
+                    .select('*')
+                    .eq('task_id', chatTaskId)
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+
+                if (data) {
+                    // Проверяем, появились ли новые сообщения
+                    if (data.length !== chatMessages.length) {
+                        chatMessages = data;
+                        renderChatMessages();
+                        // Если новые сообщения не от нас — уведомление
+                        if (data.length > 0) {
+                            const lastMsg = data[data.length - 1];
+                            if (lastMsg.author !== currentUser) {
+                                const oldLast = chatMessages[chatMessages.length - 2];
+                                if (!oldLast || oldLast.id !== lastMsg.id) {
+                                    showToast(`💬 ${lastMsg.author}: ${lastMsg.message.substring(0, 30)}...`);
+                                    if (navigator.vibrate) navigator.vibrate(50);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Ошибка автообновления чата:', e);
+            }
+        }
+
+        // ===== ЧАТ =====
         function subscribeToChat(taskId) {
-            // Отписываемся от старого канала
             if (chatChannel) {
                 supabase.removeChannel(chatChannel);
                 chatChannel = null;
-                isChatSubscribed = false;
             }
 
             if (!isConfigured || !taskId) return;
 
-            // Создаём канал для конкретного чата
             chatChannel = supabase
                 .channel(`chat-${taskId}`)
                 .on(
@@ -901,13 +952,10 @@
                         filter: `task_id=eq.${taskId}`
                     },
                     (payload) => {
-                        // Новое сообщение!
                         const newMsg = payload.new;
-                        // Добавляем, если его ещё нет в списке
                         if (!chatMessages.find(m => m.id === newMsg.id)) {
                             chatMessages.push(newMsg);
                             renderChatMessages();
-                            // Уведомление, если сообщение не от нас
                             if (newMsg.author !== currentUser) {
                                 showToast(`💬 ${newMsg.author}: ${newMsg.message.substring(0, 30)}...`);
                                 if (navigator.vibrate) navigator.vibrate(50);
@@ -917,13 +965,11 @@
                 )
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
-                        isChatSubscribed = true;
                         chatOnline.textContent = '🟢 онлайн';
                         chatOnline.style.color = '#238636';
                     } else {
-                        isChatSubscribed = false;
-                        chatOnline.textContent = '🔴 офлайн';
-                        chatOnline.style.color = '#da3633';
+                        chatOnline.textContent = '🔄 обновление...';
+                        chatOnline.style.color = '#d29922';
                     }
                 });
         }
@@ -935,20 +981,19 @@
             chatMessagesEl.innerHTML = '<div style="text-align:center;color:#8b949e;padding:20px;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div>';
             chatOverlay.classList.add('open');
             
-            // Подписываемся на обновления чата
             subscribeToChat(taskId);
-            
             loadChatMessages(taskId);
+            startChatAutoUpdate(); // Запускаем автообновление
+            
             setTimeout(() => chatInput.focus(), 300);
         }
 
         function closeChat() {
-            // Отписываемся от канала
             if (chatChannel) {
                 supabase.removeChannel(chatChannel);
                 chatChannel = null;
-                isChatSubscribed = false;
             }
+            stopChatAutoUpdate(); // Останавливаем автообновление
             chatOverlay.classList.remove('open');
             chatTaskId = null;
             chatMessages = [];
@@ -1066,7 +1111,6 @@
                 }
 
                 if (data && data.length > 0) {
-                    // Сообщение добавится через подписку, но добавим сразу для скорости
                     chatMessages.push(data[0]);
                     renderChatMessages();
                 }
