@@ -52,7 +52,6 @@
             padding: 0 16px 20px;
         }
 
-        /* --- Шапка --- */
         .header {
             display: flex;
             align-items: center;
@@ -99,7 +98,7 @@
             letter-spacing: -0.5px;
         }
 
-        .header .connection-status {
+        .header .status {
             margin-left: auto;
             background: rgba(74, 175, 122, 0.15);
             border: 1px solid var(--success);
@@ -111,15 +110,28 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            transition: all 0.3s;
         }
 
-        .header .connection-status.disconnected {
+        .header .status.offline {
             border-color: var(--danger);
             color: var(--danger);
             background: rgba(200, 70, 70, 0.15);
+            animation: blink 1s infinite;
         }
 
-        /* --- Лента --- */
+        .header .status.connecting {
+            border-color: var(--warning);
+            color: var(--warning);
+            background: rgba(240, 160, 48, 0.15);
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
         .feed {
             display: flex;
             flex-direction: column;
@@ -207,7 +219,6 @@
             border: 1px solid var(--border-color);
         }
 
-        /* --- Модалка --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -241,14 +252,8 @@
         }
 
         @keyframes slideUp {
-            from {
-                transform: translateY(40px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-content .close-btn {
@@ -331,7 +336,6 @@
             border-color: #c94a4a;
         }
 
-        /* --- Вкладка Аккаунт --- */
         .account-tab {
             display: none;
             flex-direction: column;
@@ -386,6 +390,7 @@
             padding: 4px 8px;
             border-radius: 8px;
             cursor: pointer;
+            max-width: 60%;
         }
 
         .account-tab .user-info .peer-id:hover {
@@ -440,11 +445,6 @@
 
         .account-tab .connect-section .input-group button:hover {
             background: var(--accent-hover);
-        }
-
-        .account-tab .connect-section .input-group button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .create-form {
@@ -546,7 +546,6 @@
             transform: scale(1.02);
         }
 
-        /* --- Чат --- */
         .chat-section {
             display: none;
             background: var(--bg-card);
@@ -584,6 +583,12 @@
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
+        }
+
+        .chat-header .chat-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .chat-header .chat-info {
@@ -792,43 +797,19 @@
             text-align: center;
         }
 
-        .cat-study {
-            border-left: 4px solid var(--accent);
-        }
-        .cat-help {
-            border-left: 4px solid var(--success);
-        }
-        .cat-event {
-            border-left: 4px solid var(--warning);
-        }
-        .cat-secret {
-            border-left: 4px solid var(--purple);
-        }
-        .cat-shop {
-            border-left: 4px solid var(--pink);
-        }
-        .cat-sport {
-            border-left: 4px solid var(--orange);
-        }
-        .cat-tech {
-            border-left: 4px solid var(--cyan);
-        }
-        .cat-other {
-            border-left: 4px solid var(--text-muted);
-        }
+        .cat-study { border-left: 4px solid var(--accent); }
+        .cat-help { border-left: 4px solid var(--success); }
+        .cat-event { border-left: 4px solid var(--warning); }
+        .cat-secret { border-left: 4px solid var(--purple); }
+        .cat-shop { border-left: 4px solid var(--pink); }
+        .cat-sport { border-left: 4px solid var(--orange); }
+        .cat-tech { border-left: 4px solid var(--cyan); }
+        .cat-other { border-left: 4px solid var(--text-muted); }
 
         @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.5rem;
-            }
-            .modal-content {
-                padding: 20px 16px;
-            }
-            .chat-message {
-                max-width: 90%;
-                font-size: 0.85rem;
-                padding: 6px 12px;
-            }
+            .header h1 { font-size: 1.5rem; }
+            .modal-content { padding: 20px 16px; }
+            .chat-message { max-width: 90%; font-size: 0.85rem; padding: 6px 12px; }
         }
     </style>
 </head>
@@ -840,14 +821,13 @@
                 <img src="https://github.com/tvink001v-ops/ghost/blob/main/%D0%91%D0%B5%D0%B7%20%D0%BD%D0%B0%D0%B7%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F28_20260729001722.png?raw=true" alt="Ghost Logo" />
             </div>
             <h1>GHOST</h1>
-            <div class="connection-status" id="connectionStatus">🔗 Подключение...</div>
+            <div class="status" id="connectionStatus">🔗 Подключение...</div>
         </header>
 
         <div id="feedContainer" class="feed">
-            <div class="empty-state">Нет заданий. Создайте первое!</div>
+            <div class="empty-state">🎒 Нет заданий. Создайте первое!</div>
         </div>
 
-        <!-- Чат -->
         <div class="chat-section" id="chatSection">
             <div class="chat-header">
                 <div class="chat-avatar" id="chatAvatar">👤</div>
@@ -864,7 +844,6 @@
             </div>
         </div>
 
-        <!-- Вкладка Аккаунт -->
         <div id="accountTab" class="account-tab">
             <div class="account-header">
                 <h2>Аккаунт</h2>
@@ -923,7 +902,6 @@
             </form>
         </div>
 
-        <!-- Вкладка Чаты -->
         <div id="chatsTab" style="display: none;">
             <h2 style="margin-bottom: 12px;">👥 Подключения</h2>
             <div id="connectionsList">
@@ -931,7 +909,6 @@
             </div>
         </div>
 
-        <!-- Модалка задания -->
         <div class="modal-overlay" id="detailModal">
             <div class="modal-content">
                 <button class="close-btn" id="modalCloseBtn">✕</button>
@@ -944,7 +921,6 @@
         </div>
     </div>
 
-    <!-- Нижняя навигация -->
     <nav class="bottom-nav">
         <button class="nav-item active" data-tab="feed" id="navFeed">
             <span class="nav-icon">
@@ -969,232 +945,115 @@
     </nav>
 
     <script>
+        // ============================================
+        // GHOST — ВЕСЬ КОД В ОДНОМ ФАЙЛЕ
+        // Работает через PeerJS (P2P, без сервера)
+        // ============================================
+
         (function() {
-            // --- PEERJS ---
+            'use strict';
+
+            // --- ПЕРЕМЕННЫЕ ---
             let peer = null;
-            let connections = {}; // { peerId: connection }
+            let connections = {};
             let tasks = [];
+            let localChats = {};
             let userName = 'Аноним';
             let userId = '';
+            let currentChatPeer = null;
+            let reconnectAttempts = 0;
+            let isConnecting = false;
+            let reconnectTimer = null;
 
             // --- DOM ---
-            const feedContainer = document.getElementById('feedContainer');
-            const accountTab = document.getElementById('accountTab');
-            const chatsTab = document.getElementById('chatsTab');
-            const navFeed = document.getElementById('navFeed');
-            const navAccount = document.getElementById('navAccount');
-            const navChats = document.getElementById('navChats');
-            const createForm = document.getElementById('createTaskForm');
-            const modalOverlay = document.getElementById('detailModal');
-            const modalCloseBtn = document.getElementById('modalCloseBtn');
-            const modalImage = document.getElementById('modalImage');
-            const modalMainText = document.getElementById('modalMainText');
-            const modalDetailText = document.getElementById('modalDetailText');
-            const modalRespondBtn = document.getElementById('modalRespondBtn');
-            const modalDeleteBtn = document.getElementById('modalDeleteBtn');
-            const taskCount = document.getElementById('taskCount');
-            const chatSection = document.getElementById('chatSection');
-            const chatMessages = document.getElementById('chatMessages');
-            const chatInput = document.getElementById('chatInput');
-            const chatSendBtn = document.getElementById('chatSendBtn');
-            const closeChatBtn = document.getElementById('closeChatBtn');
-            const chatPartnerName = document.getElementById('chatPartnerName');
-            const chatStatus = document.getElementById('chatStatus');
-            const chatAvatar = document.getElementById('chatAvatar');
-            const chatBadge = document.getElementById('chatBadge');
-            const userNameDisplay = document.getElementById('userNameDisplay');
-            const peerIdDisplay = document.getElementById('peerIdDisplay');
-            const connectionStatus = document.getElementById('connectionStatus');
-            const connectInput = document.getElementById('connectInput');
-            const connectBtn = document.getElementById('connectBtn');
-            const connectionsList = document.getElementById('connectionsList');
-            const connectedCount = document.getElementById('connectedCount');
+            const dom = {};
 
-            // --- ИНИЦИАЛИЗАЦИЯ PEERJS ---
-            function initPeer() {
-                // Генерируем случайный ID
-                userId = 'ghost-' + Math.random().toString(36).substr(2, 8);
-                
-                peer = new Peer(userId, {
-                    debug: 2
-                });
+            // --- КОНФИГ ---
+            const PEER_SERVERS = [
+                { host: '0.peerjs.com', port: 443, path: '/', secure: true },
+                { host: '1.peerjs.com', port: 443, path: '/', secure: true },
+                { host: '2.peerjs.com', port: 443, path: '/', secure: true },
+                { host: '3.peerjs.com', port: 443, path: '/', secure: true },
+                { host: '4.peerjs.com', port: 443, path: '/', secure: true },
+                // Российские серверы (если есть)
+                { host: 'peerjs-server.cyclic.app', port: 443, path: '/', secure: true },
+            ];
 
-                peer.on('open', function(id) {
-                    console.log('✅ Peer открыт! ID:', id);
-                    userId = id;
-                    peerIdDisplay.textContent = '📋 ' + id;
-                    peerIdDisplay.title = 'Нажми чтобы скопировать ID';
-                    updateConnectionStatus('connected');
-                    showToast('✅ Подключено! Твой ID: ' + id);
-                    
-                    // Загружаем сохранённые данные
-                    loadLocalData();
-                });
+            const STUN_SERVERS = [
+                'stun:stun.l.google.com:19302',
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302',
+                'stun:stun3.l.google.com:19302',
+                'stun:stun4.l.google.com:19302',
+                'stun:stun.voip.online.ua',
+                'stun:stun.viagenie.ca',
+            ];
 
-                peer.on('connection', function(conn) {
-                    console.log('📥 Входящее соединение от:', conn.peer);
-                    connections[conn.peer] = conn;
-                    setupConnection(conn);
-                    updateConnectionsList();
-                    showToast('🔗 Подключился ' + conn.peer);
-                });
+            let currentServerIndex = 0;
+            let maxReconnectAttempts = 10;
 
-                peer.on('disconnected', function() {
-                    console.log('⚠️ Peer отключился');
-                    updateConnectionStatus('disconnected');
-                    showToast('⚠️ Соединение потеряно. Переподключаемся...');
-                    peer.reconnect();
-                });
+            // ============================================
+            // ИНИЦИАЛИЗАЦИЯ
+            // ============================================
 
-                peer.on('error', function(err) {
-                    console.error('❌ Ошибка PeerJS:', err);
-                    if (err.type === 'unavailable-id') {
-                        // Если ID занят, генерируем новый
-                        userId = 'ghost-' + Math.random().toString(36).substr(2, 8);
-                        peer.destroy();
-                        initPeer();
-                    } else {
-                        updateConnectionStatus('disconnected');
-                        showToast('❌ Ошибка: ' + err.message);
-                    }
-                });
-
-                // Копирование ID по клику
-                peerIdDisplay.addEventListener('click', function() {
-                    navigator.clipboard.writeText(userId).then(() => {
-                        showToast('📋 ID скопирован!');
-                    }).catch(() => {
-                        // Fallback
-                        const range = document.createRange();
-                        range.selectNode(peerIdDisplay);
-                        window.getSelection().removeAllRanges();
-                        window.getSelection().addRange(range);
-                        document.execCommand('copy');
-                        showToast('📋 ID скопирован!');
-                    });
-                });
+            function init() {
+                cacheDom();
+                loadLocalData();
+                setupEventListeners();
+                startPeerConnection();
+                switchTab('feed');
+                console.log('👻 Ghost P2P загружен!');
             }
 
-            // --- НАСТРОЙКА СОЕДИНЕНИЯ ---
-            function setupConnection(conn) {
-                conn.on('data', function(data) {
-                    console.log('📨 Получено:', data);
-                    handleIncomingData(data, conn.peer);
-                });
-
-                conn.on('close', function() {
-                    console.log('🔌 Соединение закрыто:', conn.peer);
-                    delete connections[conn.peer];
-                    updateConnectionsList();
-                    showToast('🔌 Отключился ' + conn.peer);
-                });
-
-                conn.on('error', function(err) {
-                    console.error('❌ Ошибка соединения:', err);
-                });
+            function cacheDom() {
+                dom.feedContainer = document.getElementById('feedContainer');
+                dom.accountTab = document.getElementById('accountTab');
+                dom.chatsTab = document.getElementById('chatsTab');
+                dom.navFeed = document.getElementById('navFeed');
+                dom.navAccount = document.getElementById('navAccount');
+                dom.navChats = document.getElementById('navChats');
+                dom.createForm = document.getElementById('createTaskForm');
+                dom.modalOverlay = document.getElementById('detailModal');
+                dom.modalCloseBtn = document.getElementById('modalCloseBtn');
+                dom.modalImage = document.getElementById('modalImage');
+                dom.modalMainText = document.getElementById('modalMainText');
+                dom.modalDetailText = document.getElementById('modalDetailText');
+                dom.modalRespondBtn = document.getElementById('modalRespondBtn');
+                dom.modalDeleteBtn = document.getElementById('modalDeleteBtn');
+                dom.taskCount = document.getElementById('taskCount');
+                dom.chatSection = document.getElementById('chatSection');
+                dom.chatMessages = document.getElementById('chatMessages');
+                dom.chatInput = document.getElementById('chatInput');
+                dom.chatSendBtn = document.getElementById('chatSendBtn');
+                dom.closeChatBtn = document.getElementById('closeChatBtn');
+                dom.chatPartnerName = document.getElementById('chatPartnerName');
+                dom.chatStatus = document.getElementById('chatStatus');
+                dom.chatAvatar = document.getElementById('chatAvatar');
+                dom.chatBadge = document.getElementById('chatBadge');
+                dom.userNameDisplay = document.getElementById('userNameDisplay');
+                dom.peerIdDisplay = document.getElementById('peerIdDisplay');
+                dom.connectionStatus = document.getElementById('connectionStatus');
+                dom.connectInput = document.getElementById('connectInput');
+                dom.connectBtn = document.getElementById('connectBtn');
+                dom.connectionsList = document.getElementById('connectionsList');
+                dom.connectedCount = document.getElementById('connectedCount');
             }
 
-            // --- ПОДКЛЮЧЕНИЕ К ДРУГОМУ ПОЛЬЗОВАТЕЛЮ ---
-            function connectToPeer(peerId) {
-                if (connections[peerId]) {
-                    showToast('⚠️ Уже подключены к ' + peerId);
-                    return;
-                }
-
-                if (!peer) {
-                    showToast('❌ Peer не инициализирован');
-                    return;
-                }
-
-                const conn = peer.connect(peerId);
-                connections[peerId] = conn;
-                setupConnection(conn);
-                updateConnectionsList();
-                showToast('🔗 Подключение к ' + peerId + '...');
-            }
-
-            // --- ОБРАБОТКА ВХОДЯЩИХ ДАННЫХ ---
-            function handleIncomingData(data, fromPeer) {
-                // Задания
-                if (data.type === 'task') {
-                    const task = data.payload;
-                    // Проверяем, есть ли уже такое задание
-                    if (!tasks.find(t => t.id === task.id && t.from === fromPeer)) {
-                        task.from = fromPeer;
-                        tasks.push(task);
-                        saveLocalData();
-                        renderFeed();
-                        updateTaskCount();
-                        showToast('📋 Новое задание от ' + (task.author || 'Аноним'));
-                    }
-                }
-
-                // Чат-сообщение
-                if (data.type === 'chat') {
-                    const msg = data.payload;
-                    // Если чат открыт с этим пользователем
-                    if (currentChatPeer === fromPeer) {
-                        renderChatMessage(msg.text, msg.time, false);
-                    } else {
-                        // Уведомление о новом сообщении
-                        showToast('💬 Новое сообщение от ' + fromPeer);
-                        chatBadge.style.display = 'block';
-                        // Сохраняем в локальный чат
-                        if (!localChats[fromPeer]) localChats[fromPeer] = [];
-                        localChats[fromPeer].push({ text: msg.text, time: msg.time, from: fromPeer });
-                        saveLocalChats();
-                    }
-                }
-            }
-
-            // --- ОТПРАВКА ДАННЫХ ---
-            function sendToAll(data) {
-                for (const peerId in connections) {
-                    try {
-                        connections[peerId].send(data);
-                    } catch (e) {
-                        console.error('Ошибка отправки:', e);
-                    }
-                }
-            }
-
-            function sendToPeer(peerId, data) {
-                if (connections[peerId]) {
-                    try {
-                        connections[peerId].send(data);
-                    } catch (e) {
-                        console.error('Ошибка отправки:', e);
-                        showToast('❌ Не удалось отправить');
-                    }
-                }
-            }
-
-            // --- ЛОКАЛЬНОЕ ХРАНЕНИЕ ---
-            let localChats = {};
-            let currentChatPeer = null;
+            // ============================================
+            // ЛОКАЛЬНОЕ ХРАНЕНИЕ
+            // ============================================
 
             function loadLocalData() {
                 try {
                     const storedTasks = localStorage.getItem('ghost_p2p_tasks');
-                    if (storedTasks) {
-                        tasks = JSON.parse(storedTasks);
-                    } else {
-                        tasks = [];
-                    }
+                    tasks = storedTasks ? JSON.parse(storedTasks) : [];
 
                     const storedName = localStorage.getItem('ghost_p2p_name');
-                    if (storedName) {
-                        userName = storedName;
-                        userNameDisplay.textContent = userName;
-                    }
+                    userName = storedName || 'Аноним';
+                    if (dom.userNameDisplay) dom.userNameDisplay.textContent = userName;
 
                     const storedChats = localStorage.getItem('ghost_p2p_chats');
-                    if (storedChats) {
-                        localChats = JSON.parse(storedChats);
-                    } else {
-                        localChats = {};
-                    }
-
+                    localChats = storedChats ? JSON.parse(storedChats) : {};
                 } catch (e) {
                     tasks = [];
                     localChats = {};
@@ -1217,25 +1076,266 @@
                 } catch (e) {}
             }
 
-            // --- РЕНДЕР ЛЕНТЫ ---
-            function renderFeed() {
-                if (tasks.length === 0) {
-                    feedContainer.innerHTML = `<div class="empty-state">🎒 Нет заданий. Создайте первое!</div>`;
+            // ============================================
+            // PEERJS — СОЕДИНЕНИЕ
+            // ============================================
+
+            function startPeerConnection() {
+                updateConnectionStatus('connecting');
+                createPeerWithServer(currentServerIndex);
+            }
+
+            function createPeerWithServer(serverIndex) {
+                if (serverIndex >= PEER_SERVERS.length) {
+                    showToast('❌ Не удалось подключиться. Попробуйте обновить страницу.');
+                    updateConnectionStatus('offline');
                     return;
                 }
-                feedContainer.innerHTML = '';
+
+                const server = PEER_SERVERS[serverIndex];
+                console.log(`🔄 Пробуем сервер ${serverIndex + 1}: ${server.host}`);
+
+                userId = 'ghost-' + Math.random().toString(36).substr(2, 8);
+
+                try {
+                    peer = new Peer(userId, {
+                        host: server.host,
+                        port: server.port,
+                        path: server.path,
+                        secure: server.secure,
+                        debug: 1,
+                        config: {
+                            iceServers: STUN_SERVERS.map(url => ({ urls: url }))
+                        }
+                    });
+
+                    setupPeerEvents(serverIndex);
+                } catch (e) {
+                    console.error('❌ Ошибка создания Peer:', e);
+                    currentServerIndex = serverIndex + 1;
+                    setTimeout(() => createPeerWithServer(currentServerIndex), 2000);
+                }
+            }
+
+            function setupPeerEvents(serverIndex) {
+                peer.on('open', function(id) {
+                    console.log('✅ Peer открыт! ID:', id);
+                    userId = id;
+                    if (dom.peerIdDisplay) {
+                        dom.peerIdDisplay.textContent = '📋 ' + id;
+                    }
+                    updateConnectionStatus('online');
+                    reconnectAttempts = 0;
+                    isConnecting = false;
+                    showToast('✅ Подключено! Твой ID: ' + id);
+
+                    // Загружаем данные после подключения
+                    loadLocalData();
+                });
+
+                peer.on('connection', function(conn) {
+                    console.log('📥 Входящее соединение от:', conn.peer);
+                    connections[conn.peer] = conn;
+                    setupConnection(conn);
+                    updateConnectionsList();
+                    showToast('🔗 Подключился ' + conn.peer);
+                });
+
+                peer.on('disconnected', function() {
+                    console.log('⚠️ Peer отключился');
+                    updateConnectionStatus('offline');
+                    handleReconnect();
+                });
+
+                peer.on('close', function() {
+                    console.log('🔒 Peer закрыт');
+                    updateConnectionStatus('offline');
+                    handleReconnect();
+                });
+
+                peer.on('error', function(err) {
+                    console.error('❌ Ошибка PeerJS:', err);
+
+                    if (err.type === 'unavailable-id') {
+                        userId = 'ghost-' + Math.random().toString(36).substr(2, 8);
+                        peer.destroy();
+                        createPeerWithServer(serverIndex);
+                    } else if (err.type === 'server-error' || err.type === 'disconnected') {
+                        peer.destroy();
+                        currentServerIndex = serverIndex + 1;
+                        setTimeout(() => createPeerWithServer(currentServerIndex), 3000);
+                    } else if (err.type === 'peer-unavailable') {
+                        showToast('❌ Пользователь не в сети');
+                    } else {
+                        updateConnectionStatus('offline');
+                        if (!isConnecting) {
+                            handleReconnect();
+                        }
+                    }
+                });
+
+                // Копирование ID
+                if (dom.peerIdDisplay) {
+                    dom.peerIdDisplay.addEventListener('click', function() {
+                        if (navigator.clipboard) {
+                            navigator.clipboard.writeText(userId).then(() => {
+                                showToast('📋 ID скопирован!');
+                            });
+                        } else {
+                            const range = document.createRange();
+                            range.selectNode(dom.peerIdDisplay);
+                            window.getSelection().removeAllRanges();
+                            window.getSelection().addRange(range);
+                            document.execCommand('copy');
+                            showToast('📋 ID скопирован!');
+                        }
+                    });
+                }
+            }
+
+            function handleReconnect() {
+                if (isConnecting) return;
+                if (reconnectAttempts >= maxReconnectAttempts) {
+                    showToast('❌ Не удалось переподключиться. Обновите страницу.');
+                    return;
+                }
+
+                isConnecting = true;
+                reconnectAttempts++;
+                updateConnectionStatus('connecting');
+
+                const delay = Math.min(3000 * reconnectAttempts, 20000);
+                console.log(`🔄 Переподключение ${reconnectAttempts}/${maxReconnectAttempts} через ${delay}мс`);
+
+                clearTimeout(reconnectTimer);
+                reconnectTimer = setTimeout(() => {
+                    if (peer) peer.destroy();
+                    currentServerIndex = (currentServerIndex + 1) % PEER_SERVERS.length;
+                    createPeerWithServer(currentServerIndex);
+                    isConnecting = false;
+                }, delay);
+            }
+
+            function setupConnection(conn) {
+                conn.on('data', function(data) {
+                    console.log('📨 Получено:', data);
+                    handleIncomingData(data, conn.peer);
+                });
+
+                conn.on('close', function() {
+                    console.log('🔌 Соединение закрыто:', conn.peer);
+                    delete connections[conn.peer];
+                    updateConnectionsList();
+                    showToast('🔌 Отключился ' + conn.peer);
+                });
+
+                conn.on('error', function(err) {
+                    console.error('❌ Ошибка соединения:', err);
+                });
+            }
+
+            function connectToPeer(peerId) {
+                if (connections[peerId]) {
+                    showToast('⚠️ Уже подключены к ' + peerId);
+                    return;
+                }
+
+                if (!peer) {
+                    showToast('❌ Peer не инициализирован');
+                    return;
+                }
+
+                try {
+                    const conn = peer.connect(peerId);
+                    connections[peerId] = conn;
+                    setupConnection(conn);
+                    updateConnectionsList();
+                    showToast('🔗 Подключение к ' + peerId + '...');
+                } catch (e) {
+                    showToast('❌ Ошибка подключения: ' + e.message);
+                }
+            }
+
+            function sendToAll(data) {
+                for (const peerId in connections) {
+                    try {
+                        connections[peerId].send(data);
+                    } catch (e) {
+                        console.error('Ошибка отправки:', e);
+                    }
+                }
+            }
+
+            function sendToPeer(peerId, data) {
+                if (connections[peerId]) {
+                    try {
+                        connections[peerId].send(data);
+                    } catch (e) {
+                        console.error('Ошибка отправки:', e);
+                        showToast('❌ Не удалось отправить');
+                    }
+                }
+            }
+
+            // ============================================
+            // ОБРАБОТКА ВХОДЯЩИХ ДАННЫХ
+            // ============================================
+
+            function handleIncomingData(data, fromPeer) {
+                if (data.type === 'task') {
+                    const task = data.payload;
+                    if (!tasks.find(t => t.id === task.id && t.from === fromPeer)) {
+                        task.from = fromPeer;
+                        tasks.push(task);
+                        saveLocalData();
+                        renderFeed();
+                        updateTaskCount();
+                        showToast('📋 Новое задание от ' + (task.author || 'Аноним'));
+                    }
+                }
+
+                if (data.type === 'chat') {
+                    const msg = data.payload;
+                    if (currentChatPeer === fromPeer) {
+                        renderChatMessage(msg.text, msg.time, false);
+                    } else {
+                        showToast('💬 Новое сообщение от ' + fromPeer);
+                        if (dom.chatBadge) dom.chatBadge.style.display = 'block';
+                        if (!localChats[fromPeer]) localChats[fromPeer] = [];
+                        localChats[fromPeer].push({ text: msg.text, time: msg.time, from: fromPeer });
+                        saveLocalChats();
+                    }
+                }
+            }
+
+            // ============================================
+            // РЕНДЕР
+            // ============================================
+
+            function renderFeed() {
+                if (!dom.feedContainer) return;
+
+                if (tasks.length === 0) {
+                    dom.feedContainer.innerHTML = `<div class="empty-state">🎒 Нет заданий. Создайте первое!</div>`;
+                    return;
+                }
+
+                dom.feedContainer.innerHTML = '';
                 [...tasks].reverse().forEach(task => {
                     const card = document.createElement('div');
                     card.className = `task-card cat-${task.category || 'other'}`;
                     card.dataset.id = task.id;
-                    const imageHtml = task.image ? `<img src="${task.image}" alt="Фото" />` :
+
+                    const imageHtml = task.image ?
+                        `<img src="${task.image}" alt="Фото" />` :
                         `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='180' viewBox='0 0 200 180'%3E%3Crect width='200' height='180' fill='%23141b24'/%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='%237b8aa3' text-anchor='middle' dy='.3em'%3E📚 Нет фото%3C/text%3E%3C/svg%3E" alt="Нет фото" />`;
+
                     const emoji = { 'study': '📚', 'help': '🤝', 'event': '🎉', 'secret': '🔒', 'shop': '🛍️', 'sport': '⚽',
                         'tech': '💻', 'other': '📌' } [task.category] || '📌';
                     const name = { 'study': 'Учёба', 'help': 'Помощь', 'event': 'Мероприятие', 'secret': 'Секретное',
-                        'shop': 'Покупки', 'sport': 'Спорт', 'tech': 'Техника', 'other': 'Другое' } [task.category] ||
-                        'Другое';
+                        'shop': 'Покупки', 'sport': 'Спорт', 'tech': 'Техника', 'other': 'Другое' } [task.category] || 'Другое';
                     const from = task.from ? task.from.substr(0, 8) : 'локальное';
+
                     card.innerHTML = `
                         ${imageHtml}
                         <h3>${escapeHtml(task.mainText) || 'Без заголовка'}</h3>
@@ -1248,93 +1348,29 @@
                         <div class="category-badge">${emoji} ${name}</div>
                         <div class="from-badge">📡 ${from}</div>
                     `;
+
                     card.addEventListener('click', () => openDetail(task));
-                    feedContainer.appendChild(card);
+                    dom.feedContainer.appendChild(card);
                 });
             }
 
             function updateTaskCount() {
-                taskCount.textContent = tasks.length;
+                if (dom.taskCount) dom.taskCount.textContent = tasks.length;
             }
 
-            // --- ОТКРЫТЬ ДЕТАЛИ ---
-            function openDetail(task) {
-                modalImage.src = task.image ||
-                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220"%3E%3Crect width="400" height="220" fill="%23141b24"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%237b8aa3" text-anchor="middle" dy=".3em"%3E📚 Без фото%3C/text%3E%3C/svg%3E';
-                modalMainText.textContent = task.mainText || 'Без названия';
-                modalDetailText.textContent = task.detailText || 'Подробное описание отсутствует.';
-                modalOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                
-                // Сохраняем задание для отклика
-                modalOverlay.dataset.taskId = task.id;
-                modalOverlay.dataset.taskFrom = task.from || '';
-            }
-
-            function closeDetail() {
-                modalOverlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-
-            // --- ОТКРЫТЬ ЧАТ ---
-            function openChat(peerId, peerName) {
-                currentChatPeer = peerId;
-                chatPartnerName.textContent = peerName || peerId.substr(0, 8);
-                chatAvatar.textContent = (peerName || '?').charAt(0).toUpperCase();
-                chatSection.classList.add('active');
-                
-                // Загружаем историю чата
-                chatMessages.innerHTML = '';
-                if (localChats[peerId]) {
-                    localChats[peerId].forEach(msg => {
-                        const isOwn = msg.from === userId;
-                        renderChatMessage(msg.text, msg.time, isOwn);
-                    });
-                }
-                chatInput.focus();
-            }
-
-            function renderChatMessage(text, time, isOwn) {
-                const div = document.createElement('div');
-                div.className = 'chat-message';
-                if (isOwn) div.classList.add('own');
-                const timeStr = new Date(time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                div.innerHTML = `${escapeHtml(text)} <span class="msg-time">${timeStr}</span>`;
-                chatMessages.appendChild(div);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function sendChatMessage() {
-                const text = chatInput.value.trim();
-                if (!text || !currentChatPeer) return;
-
-                // Сохраняем локально
-                if (!localChats[currentChatPeer]) localChats[currentChatPeer] = [];
-                localChats[currentChatPeer].push({ text, time: Date.now(), from: userId });
-                saveLocalChats();
-
-                // Отображаем
-                renderChatMessage(text, Date.now(), true);
-                chatInput.value = '';
-
-                // Отправляем собеседнику
-                sendToPeer(currentChatPeer, {
-                    type: 'chat',
-                    payload: { text, time: Date.now() }
-                });
-            }
-
-            // --- ОБНОВЛЕНИЕ СПИСКА ПОДКЛЮЧЕНИЙ ---
             function updateConnectionsList() {
                 const peerIds = Object.keys(connections);
-                connectedCount.textContent = peerIds.length;
-                
+                if (dom.connectedCount) dom.connectedCount.textContent = peerIds.length;
+
+                if (!dom.connectionsList) return;
+
                 if (peerIds.length === 0) {
-                    connectionsList.innerHTML = `<div class="empty-state">Нет подключений. Подключитесь к кому-нибудь через вкладку "Аккаунт"</div>`;
+                    dom.connectionsList.innerHTML =
+                        `<div class="empty-state">Нет подключений. Подключитесь к кому-нибудь через вкладку "Аккаунт"</div>`;
                     return;
                 }
-                
-                connectionsList.innerHTML = '';
+
+                dom.connectionsList.innerHTML = '';
                 peerIds.forEach(peerId => {
                     const div = document.createElement('div');
                     div.className = 'contact-item';
@@ -1353,21 +1389,175 @@
                     btn.addEventListener('click', () => {
                         openChat(peerId, name);
                     });
-                    connectionsList.appendChild(div);
+                    dom.connectionsList.appendChild(div);
                 });
             }
 
             function updateConnectionStatus(status) {
-                if (status === 'connected') {
-                    connectionStatus.className = 'connection-status';
-                    connectionStatus.innerHTML = '🟢 Онлайн';
+                if (!dom.connectionStatus) return;
+                dom.connectionStatus.className = 'status';
+                if (status === 'online') {
+                    dom.connectionStatus.className = 'status';
+                    dom.connectionStatus.innerHTML = '🟢 Онлайн';
+                } else if (status === 'connecting') {
+                    dom.connectionStatus.className = 'status connecting';
+                    dom.connectionStatus.innerHTML = '🔄 Подключение...';
                 } else {
-                    connectionStatus.className = 'connection-status disconnected';
-                    connectionStatus.innerHTML = '🔴 Офлайн';
+                    dom.connectionStatus.className = 'status offline';
+                    dom.connectionStatus.innerHTML = '🔴 Офлайн';
                 }
             }
 
-            // --- ВСПОМОГАТЕЛЬНЫЕ ---
+            // ============================================
+            // ДЕТАЛИ И ЧАТ
+            // ============================================
+
+            function openDetail(task) {
+                if (!dom.modalOverlay) return;
+                dom.modalImage.src = task.image ||
+                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220"%3E%3Crect width="400" height="220" fill="%23141b24"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%237b8aa3" text-anchor="middle" dy=".3em"%3E📚 Без фото%3C/text%3E%3C/svg%3E';
+                dom.modalMainText.textContent = task.mainText || 'Без названия';
+                dom.modalDetailText.textContent = task.detailText || 'Подробное описание отсутствует.';
+                dom.modalOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                dom.modalOverlay.dataset.taskId = task.id;
+                dom.modalOverlay.dataset.taskFrom = task.from || '';
+            }
+
+            function closeDetail() {
+                if (!dom.modalOverlay) return;
+                dom.modalOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            function openChat(peerId, peerName) {
+                currentChatPeer = peerId;
+                dom.chatPartnerName.textContent = peerName || peerId.substr(0, 8);
+                dom.chatAvatar.textContent = (peerName || '?').charAt(0).toUpperCase();
+                dom.chatSection.classList.add('active');
+
+                dom.chatMessages.innerHTML = '';
+                if (localChats[peerId]) {
+                    localChats[peerId].forEach(msg => {
+                        const isOwn = msg.from === userId;
+                        renderChatMessage(msg.text, msg.time, isOwn);
+                    });
+                }
+                dom.chatInput.focus();
+                dom.chatBadge.style.display = 'none';
+            }
+
+            function renderChatMessage(text, time, isOwn) {
+                const div = document.createElement('div');
+                div.className = 'chat-message';
+                if (isOwn) div.classList.add('own');
+                const timeStr = new Date(time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                div.innerHTML = `${escapeHtml(text)} <span class="msg-time">${timeStr}</span>`;
+                dom.chatMessages.appendChild(div);
+                dom.chatMessages.scrollTop = dom.chatMessages.scrollHeight;
+            }
+
+            function sendChatMessage() {
+                const text = dom.chatInput.value.trim();
+                if (!text || !currentChatPeer) return;
+
+                if (!localChats[currentChatPeer]) localChats[currentChatPeer] = [];
+                localChats[currentChatPeer].push({ text, time: Date.now(), from: userId });
+                saveLocalChats();
+
+                renderChatMessage(text, Date.now(), true);
+                dom.chatInput.value = '';
+
+                sendToPeer(currentChatPeer, {
+                    type: 'chat',
+                    payload: { text, time: Date.now() }
+                });
+            }
+
+            function closeChat() {
+                dom.chatSection.classList.remove('active');
+                currentChatPeer = null;
+            }
+
+            // ============================================
+            // ЗАДАНИЯ
+            // ============================================
+
+            function addTask(taskName, mainText, detailText, imageDataUrl, category) {
+                const task = {
+                    id: Date.now(),
+                    image: imageDataUrl || '',
+                    author: taskName || 'Аноним',
+                    mainText: mainText,
+                    detailText: detailText || '',
+                    category: category || 'other',
+                    date: new Date().toISOString(),
+                    from: userId
+                };
+
+                tasks.push(task);
+                saveLocalData();
+                renderFeed();
+                updateTaskCount();
+
+                sendToAll({
+                    type: 'task',
+                    payload: task
+                });
+
+                if (dom.createForm) dom.createForm.reset();
+                switchTab('feed');
+                showToast('✅ Задание опубликовано и отправлено!');
+            }
+
+            function deleteTask(taskId) {
+                if (confirm('🗑️ Удалить это задание?')) {
+                    tasks = tasks.filter(t => t.id != taskId);
+                    saveLocalData();
+                    renderFeed();
+                    updateTaskCount();
+                    closeDetail();
+                    showToast('🗑️ Задание удалено');
+                }
+            }
+
+            // ============================================
+            // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+            // ============================================
+
+            function switchTab(tab) {
+                closeChat();
+
+                if (tab === 'feed') {
+                    dom.feedContainer.style.display = 'flex';
+                    dom.accountTab.classList.remove('active');
+                    dom.chatsTab.style.display = 'none';
+                    dom.navFeed.classList.add('active');
+                    dom.navAccount.classList.remove('active');
+                    dom.navChats.classList.remove('active');
+                    renderFeed();
+                } else if (tab === 'account') {
+                    dom.feedContainer.style.display = 'none';
+                    dom.accountTab.classList.add('active');
+                    dom.chatsTab.style.display = 'none';
+                    dom.navAccount.classList.add('active');
+                    dom.navFeed.classList.remove('active');
+                    dom.navChats.classList.remove('active');
+                } else if (tab === 'chats') {
+                    dom.feedContainer.style.display = 'none';
+                    dom.accountTab.classList.remove('active');
+                    dom.chatsTab.style.display = 'block';
+                    dom.navChats.classList.add('active');
+                    dom.navFeed.classList.remove('active');
+                    dom.navAccount.classList.remove('active');
+                    updateConnectionsList();
+                }
+            }
+
+            // ============================================
+            // ВСПОМОГАТЕЛЬНЫЕ
+            // ============================================
+
             function escapeHtml(unsafe) {
                 if (!unsafe) return '';
                 return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
@@ -1384,153 +1574,116 @@
                 setTimeout(() => toast.remove(), 3000);
             }
 
-            function switchTab(tab) {
-                if (tab === 'feed') {
-                    feedContainer.style.display = 'flex';
-                    accountTab.classList.remove('active');
-                    chatsTab.style.display = 'none';
-                    navFeed.classList.add('active');
-                    navAccount.classList.remove('active');
-                    navChats.classList.remove('active');
-                    chatSection.classList.remove('active');
-                } else if (tab === 'account') {
-                    feedContainer.style.display = 'none';
-                    accountTab.classList.add('active');
-                    chatsTab.style.display = 'none';
-                    navAccount.classList.add('active');
-                    navFeed.classList.remove('active');
-                    navChats.classList.remove('active');
-                    chatSection.classList.remove('active');
-                } else if (tab === 'chats') {
-                    feedContainer.style.display = 'none';
-                    accountTab.classList.remove('active');
-                    chatsTab.style.display = 'block';
-                    navChats.classList.add('active');
-                    navFeed.classList.remove('active');
-                    navAccount.classList.remove('active');
-                    updateConnectionsList();
+            // ============================================
+            // ОБРАБОТЧИКИ СОБЫТИЙ
+            // ============================================
+
+            function setupEventListeners() {
+                // Создание задания
+                if (dom.createForm) {
+                    dom.createForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const fileInput = document.getElementById('taskPhoto');
+                        const taskName = document.getElementById('taskName').value.trim();
+                        const mainText = document.getElementById('taskMainText').value.trim();
+                        const detailText = document.getElementById('taskDetailText').value.trim();
+                        const category = document.getElementById('taskCategory').value;
+
+                        if (!taskName) { showToast('Напишите своё имя!'); return; }
+                        if (!mainText) { showToast('Напишите, что нужно сделать.'); return; }
+
+                        userName = taskName;
+                        localStorage.setItem('ghost_p2p_name', userName);
+                        if (dom.userNameDisplay) dom.userNameDisplay.textContent = userName;
+
+                        const file = fileInput.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(ev) {
+                                addTask(taskName, mainText, detailText, ev.target.result, category);
+                            };
+                            reader.onerror = function() {
+                                addTask(taskName, mainText, detailText, '', category);
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            addTask(taskName, mainText, detailText, '', category);
+                        }
+                    });
                 }
+
+                // Подключение
+                if (dom.connectBtn) {
+                    dom.connectBtn.addEventListener('click', function() {
+                        const peerId = dom.connectInput.value.trim();
+                        if (peerId) {
+                            connectToPeer(peerId);
+                            dom.connectInput.value = '';
+                        } else {
+                            showToast('❌ Введите Peer ID');
+                        }
+                    });
+                }
+
+                if (dom.connectInput) {
+                    dom.connectInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') dom.connectBtn.click();
+                    });
+                }
+
+                // Модалка
+                if (dom.modalCloseBtn) dom.modalCloseBtn.addEventListener('click', closeDetail);
+                if (dom.modalOverlay) {
+                    dom.modalOverlay.addEventListener('click', function(e) {
+                        if (e.target === dom.modalOverlay) closeDetail();
+                    });
+                }
+
+                if (dom.modalRespondBtn) {
+                    dom.modalRespondBtn.addEventListener('click', function() {
+                        const from = dom.modalOverlay.dataset.taskFrom;
+                        if (from && connections[from]) {
+                            openChat(from, from.substr(0, 8));
+                            closeDetail();
+                            showToast('💬 Чат открыт!');
+                        } else {
+                            showToast('❌ Автор задания не в сети');
+                        }
+                    });
+                }
+
+                if (dom.modalDeleteBtn) {
+                    dom.modalDeleteBtn.addEventListener('click', function() {
+                        const taskId = dom.modalOverlay.dataset.taskId;
+                        if (taskId) deleteTask(taskId);
+                    });
+                }
+
+                // Чат
+                if (dom.chatSendBtn) dom.chatSendBtn.addEventListener('click', sendChatMessage);
+                if (dom.chatInput) {
+                    dom.chatInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') sendChatMessage();
+                    });
+                }
+                if (dom.closeChatBtn) dom.closeChatBtn.addEventListener('click', closeChat);
+
+                // Навигация
+                if (dom.navFeed) dom.navFeed.addEventListener('click', () => switchTab('feed'));
+                if (dom.navAccount) dom.navAccount.addEventListener('click', () => switchTab('account'));
+                if (dom.navChats) dom.navChats.addEventListener('click', () => switchTab('chats'));
             }
 
-            // --- ОБРАБОТЧИКИ ---
+            // ============================================
+            // ЗАПУСК
+            // ============================================
 
-            // Создание задания
-            createForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const fileInput = document.getElementById('taskPhoto');
-                const taskName = document.getElementById('taskName').value.trim();
-                const mainText = document.getElementById('taskMainText').value.trim();
-                const detailText = document.getElementById('taskDetailText').value.trim();
-                const category = document.getElementById('taskCategory').value;
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
 
-                if (!taskName) { showToast('Напишите своё имя!'); return; }
-                if (!mainText) { showToast('Напишите, что нужно сделать.'); return; }
-
-                userName = taskName;
-                localStorage.setItem('ghost_p2p_name', userName);
-                userNameDisplay.textContent = userName;
-
-                const file = fileInput.files[0];
-                const processTask = function(imageData) {
-                    const task = {
-                        id: Date.now(),
-                        image: imageData || '',
-                        author: taskName,
-                        mainText: mainText,
-                        detailText: detailText || '',
-                        category: category || 'other',
-                        date: new Date().toISOString(),
-                        from: userId
-                    };
-                    
-                    // Сохраняем локально
-                    tasks.push(task);
-                    saveLocalData();
-                    renderFeed();
-                    updateTaskCount();
-                    createForm.reset();
-                    
-                    // Отправляем всем подключённым
-                    sendToAll({
-                        type: 'task',
-                        payload: task
-                    });
-                    
-                    switchTab('feed');
-                    showToast('✅ Задание опубликовано и отправлено!');
-                };
-
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(ev) { processTask(ev.target.result); };
-                    reader.onerror = function() { processTask(''); };
-                    reader.readAsDataURL(file);
-                } else {
-                    processTask('');
-                }
-            });
-
-            // Подключение
-            connectBtn.addEventListener('click', function() {
-                const peerId = connectInput.value.trim();
-                if (peerId) {
-                    connectToPeer(peerId);
-                    connectInput.value = '';
-                } else {
-                    showToast('❌ Введите Peer ID');
-                }
-            });
-
-            connectInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') connectBtn.click();
-            });
-
-            // Модалка
-            modalCloseBtn.addEventListener('click', closeDetail);
-            modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeDetail(); });
-
-            modalRespondBtn.addEventListener('click', function() {
-                const from = modalOverlay.dataset.taskFrom;
-                if (from && connections[from]) {
-                    openChat(from, from.substr(0, 8));
-                    closeDetail();
-                    showToast('💬 Чат открыт!');
-                } else {
-                    showToast('❌ Автор задания не в сети');
-                }
-            });
-
-            modalDeleteBtn.addEventListener('click', function() {
-                const taskId = modalOverlay.dataset.taskId;
-                if (taskId) {
-                    tasks = tasks.filter(t => t.id != taskId);
-                    saveLocalData();
-                    renderFeed();
-                    updateTaskCount();
-                    closeDetail();
-                    showToast('🗑️ Задание удалено');
-                }
-            });
-
-            // Чат
-            chatSendBtn.addEventListener('click', sendChatMessage);
-            chatInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendChatMessage(); });
-            closeChatBtn.addEventListener('click', function() {
-                chatSection.classList.remove('active');
-                currentChatPeer = null;
-            });
-
-            // Навигация
-            navFeed.addEventListener('click', () => switchTab('feed'));
-            navAccount.addEventListener('click', () => switchTab('account'));
-            navChats.addEventListener('click', () => switchTab('chats'));
-
-            // --- ЗАПУСК ---
-            initPeer();
-            switchTab('feed');
-
-            console.log('👻 Ghost P2P загружен!');
-            console.log('🔑 Используется библиотека PeerJS');
         })();
     </script>
 
