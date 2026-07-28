@@ -115,19 +115,20 @@
     function loadTasks() {
         var list = document.getElementById('taskList');
         
-        // Ссылка на вашу опубликованную CSV-таблицу
+        // Оригинальная ссылка на ваш CSV-файл Google
         var csvUrl = "https://google.com";
         
-        // Строгая склейка адреса прокси без использования ES6 синтаксиса, чтобы избежать кэш-багов браузера
-        var finalApiUrl = "https://codetabs.com" + encodeURIComponent(csvUrl);
+        // Публичный CORS-прокси. Ссылка собирается максимально надежным методом.
+        var finalApiUrl = "https://allorigins.win" + encodeURIComponent(csvUrl) + "&_nocache=" + Date.now();
 
         fetch(finalApiUrl)
         .then(function(res) {
-            if (!res.ok) throw new Error();
-            return res.text();
+            if (!res.ok) throw new Error("Network error");
+            return res.json();
         })
-        .then(function(textContent) {
-            var rows = parseCSV(textContent);
+        .then(function(jsonData) {
+            // Разбираем CSV-строки из ответа прокси-сервера
+            var rows = parseCSV(jsonData.contents);
             if (!rows || rows.length <= 1) {
                 list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Нет активных контрактов.</p>";
                 return;
@@ -135,7 +136,8 @@
 
             list.innerHTML = "";
 
-            for (let i = rows.length - 1; i >= 1; i--) {
+            // Сортировка от новых к старым
+            for (var i = rows.length - 1; i >= 1; i--) {
                 var cells = rows[i];
                 if (!cells || cells.length < 4) continue;
 
@@ -156,7 +158,7 @@
         })
         .catch(function(err) {
             console.error(err);
-            list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Ошибка доступа к базе данных контрактов. Обновите кэш страницы (Ctrl+F5).</p>";
+            list.innerHTML = "<p style='text-align:center; color:var(--muted);'>Ошибка доступа к базе данных контрактов. Пожалуйста, сбросьте кэш страницы (Ctrl+F5) через 1 минуту.</p>";
         });
     }
 
