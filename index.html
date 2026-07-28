@@ -19,6 +19,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             padding: 12px 10px 30px;
             color: #e6edf3;
             touch-action: manipulation;
@@ -74,8 +75,10 @@
             border: 1px solid #30363d;
             font-size: 0.8rem;
             color: #e6edf3;
+            cursor: pointer;
         }
         .user-badge i { color: #238636; font-size: 0.9rem; }
+        .user-badge:hover { background: #1c2128; }
         .status-dot {
             display: inline-block;
             width: 8px;
@@ -85,6 +88,117 @@
         }
         .status-dot.online { background: #238636; }
         .status-dot.offline { background: #da3633; }
+
+        /* ===== РЕГИСТРАЦИЯ ===== */
+        .register-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .register-overlay.hidden {
+            display: none;
+        }
+        .register-box {
+            background: #161b22;
+            border-radius: 32px;
+            padding: 32px 28px 36px;
+            max-width: 380px;
+            width: 100%;
+            border: 1px solid #30363d;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+        }
+        .register-box .logo-area {
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .register-box .logo-area .logo-icon {
+            width: 56px;
+            height: 56px;
+            font-size: 28px;
+        }
+        .register-box .logo-area .logo-text {
+            font-size: 1.6rem;
+        }
+        .register-title {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #8b949e;
+            margin-bottom: 20px;
+        }
+        .register-input-group {
+            margin-bottom: 16px;
+        }
+        .register-input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #8b949e;
+            margin-bottom: 6px;
+        }
+        .register-input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #e6edf3;
+            font-size: 1.1rem;
+            outline: none;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .register-input-group input:focus {
+            border-color: #238636;
+            box-shadow: 0 0 0 3px rgba(35, 134, 54, 0.15);
+        }
+        .register-input-group input::placeholder {
+            color: #8b949e;
+        }
+        .register-btn {
+            background: #238636;
+            border: none;
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
+        }
+        .register-btn:active { transform: scale(0.96); }
+        .register-btn:disabled {
+            opacity: 0.5;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .register-hint {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #8b949e;
+            margin-top: 12px;
+        }
+        .register-hint i { color: #238636; margin-right: 4px; }
+
+        /* Основной интерфейс */
+        .main-content {
+            display: block;
+        }
+        .main-content.hidden {
+            display: none;
+        }
 
         .create-section {
             background: #0d1117;
@@ -360,10 +474,33 @@
             100% { transform: rotate(360deg); }
         }
 
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #238636;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            max-width: 90%;
+            text-align: center;
+        }
+        .toast.show { opacity: 1; }
+        .toast.error { background: #da3633; }
+
         @media (max-width: 400px) {
             .app-wrapper { padding: 12px 10px 20px; }
             .task-actions { gap: 6px; }
             .btn-action { padding: 8px 14px; font-size: 0.75rem; min-width: 60px; }
+            .register-box { padding: 24px 20px 28px; }
         }
         @media (hover: none) {
             .task-card:hover { transform: none; }
@@ -375,14 +512,35 @@
     </style>
 </head>
 <body>
-<div class="app-wrapper">
+
+<!-- ===== РЕГИСТРАЦИЯ ===== -->
+<div class="register-overlay" id="registerOverlay">
+    <div class="register-box">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-tasks"></i></div>
+            <div class="logo-text">Доска <span>заданий</span></div>
+        </div>
+        <div class="register-title">👋 Добро пожаловать!</div>
+        <div class="register-input-group">
+            <label for="nameInput"><i class="fas fa-user"></i> Ваше имя</label>
+            <input type="text" id="nameInput" placeholder="Например: Алексей" maxlength="30" autofocus>
+        </div>
+        <button class="register-btn" id="registerBtn"><i class="fas fa-arrow-right"></i> Войти</button>
+        <div class="register-hint">
+            <i class="fas fa-info-circle"></i> Имя будет видно другим пользователям
+        </div>
+    </div>
+</div>
+
+<!-- ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== -->
+<div class="app-wrapper main-content hidden" id="mainContent">
     <div class="header">
         <div class="logo-area">
             <div class="logo-icon"><i class="fas fa-tasks"></i></div>
             <div class="logo-text">Доска <span>заданий</span></div>
         </div>
-        <div class="user-badge">
-            <span class="status-dot online" id="statusDot"></span>
+        <div class="user-badge" id="userBadge">
+            <span class="status-dot" id="statusDot"></span>
             <i class="fas fa-user"></i>
             <span id="userName">Вы</span>
         </div>
@@ -426,97 +584,189 @@
     </div>
 </div>
 
-<!-- Подключаем Supabase -->
+<div class="toast" id="toast"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     (function() {
-        // ===== НАСТРОЙКА SUPABASE =====
-        // ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ ИЗ ПАНЕЛИ SUPABASE
-        const SUPABASE_URL = 'https://ваш-проект.supabase.co';
-        const SUPABASE_ANON_KEY = 'ваш-публичный-ключ';
-        // =================================
+        // ===== ВАШИ ДАННЫЕ ИЗ SUPABASE =====
+        const SUPABASE_URL = 'https://bzntjichpncyswskbetz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6bnRqaWNocG5jeXN3c2tiZXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNjcxMzAsImV4cCI6MjEwMDg0MzEzMH0.cs9fotOCspkvmRgvksTYToaF9vhuo6eqYqL_XPjIdgI';
+        // ===================================
 
-        // Проверка настроек
         let supabase = null;
         let isConfigured = false;
-        let currentUser = 'Вы';
+        let currentUser = '';
+        const tableName = 'tasks';
 
-        // Пытаемся инициализировать
-        try {
-            if (SUPABASE_URL.includes('ваш-проект') || SUPABASE_ANON_KEY.includes('ваш-публичный')) {
-                console.warn('⚠️ Supabase не настроен. Используется локальное хранилище.');
-                isConfigured = false;
-            } else {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                isConfigured = true;
-                // Генерируем случайное имя пользователя
-                const names = ['Алексей', 'Мария', 'Дмитрий', 'Анна', 'Сергей', 'Екатерина', 'Иван', 'Ольга'];
-                currentUser = names[Math.floor(Math.random() * names.length)];
-                document.getElementById('userName').textContent = currentUser;
-            }
-        } catch (e) {
-            console.warn('⚠️ Ошибка инициализации Supabase:', e);
-            isConfigured = false;
+        // === Управление регистрацией ===
+        const registerOverlay = document.getElementById('registerOverlay');
+        const mainContent = document.getElementById('mainContent');
+        const nameInput = document.getElementById('nameInput');
+        const registerBtn = document.getElementById('registerBtn');
+        const userNameDisplay = document.getElementById('userName');
+
+        // Проверяем, есть ли сохранённое имя
+        const savedName = localStorage.getItem('task_user_name');
+        if (savedName) {
+            currentUser = savedName;
+            registerOverlay.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            userNameDisplay.textContent = currentUser;
+            initApp();
         }
 
-        // Если Supabase не настроен — используем localStorage
+        // Регистрация
+        registerBtn.addEventListener('click', function() {
+            const name = nameInput.value.trim();
+            if (name.length < 2) {
+                showToast('⚠️ Введите имя (минимум 2 символа)', true);
+                nameInput.focus();
+                return;
+            }
+            if (name.length > 30) {
+                showToast('⚠️ Имя не должно превышать 30 символов', true);
+                return;
+            }
+            currentUser = name;
+            localStorage.setItem('task_user_name', name);
+            registerOverlay.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            userNameDisplay.textContent = currentUser;
+            showToast(`👋 Добро пожаловать, ${currentUser}!`);
+            initApp();
+        });
+
+        // Enter на поле имени
+        nameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                registerBtn.click();
+            }
+        });
+
+        // Фокус на поле при загрузке
+        if (!savedName) {
+            setTimeout(() => nameInput.focus(), 300);
+        }
+
+        // === ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ ===
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.offsetHeight;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function initApp() {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                isConfigured = true;
+                document.getElementById('statusDot').className = 'status-dot online';
+                loadTasks();
+            } catch (e) {
+                console.error('Ошибка инициализации:', e);
+                document.getElementById('statusDot').className = 'status-dot offline';
+                showToast('❌ Ошибка подключения', true);
+                loadTasks();
+            }
+
+            // Обработчики
+            document.getElementById('addTaskBtn').addEventListener('click', addTask);
+            document.getElementById('taskTitleInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addTask();
+                }
+            });
+
+            // Клик по имени пользователя — смена имени
+            document.getElementById('userBadge').addEventListener('click', function() {
+                const newName = prompt('Введите новое имя:', currentUser);
+                if (newName && newName.trim().length >= 2) {
+                    currentUser = newName.trim();
+                    localStorage.setItem('task_user_name', currentUser);
+                    userNameDisplay.textContent = currentUser;
+                    showToast(`✅ Имя изменено на ${currentUser}`);
+                    renderTasks(); // обновляем список
+                } else if (newName !== null) {
+                    showToast('⚠️ Имя должно быть не менее 2 символов', true);
+                }
+            });
+
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    document.activeElement?.blur();
+                }
+            }, { passive: true });
+        }
+
         const STORAGE_KEY = 'mobile_board_tasks_cloud';
         let tasks = [];
-        let isLoading = false;
 
-        // ===== ФУНКЦИИ РАБОТЫ С ДАННЫМИ =====
         async function loadTasks() {
             const container = document.getElementById('tasksContainer');
             
             if (!isConfigured) {
-                // Локальный режим
                 const stored = localStorage.getItem(STORAGE_KEY);
                 if (stored) {
                     try {
-                        const parsed = JSON.parse(stored);
-                        if (Array.isArray(parsed)) {
-                            tasks = parsed;
-                        }
+                        tasks = JSON.parse(stored);
                     } catch (e) {}
-                }
-                if (tasks.length === 0) {
-                    tasks = [];
                 }
                 renderTasks();
                 return;
             }
 
-            // Облачный режим
             try {
-                isLoading = true;
                 container.innerHTML = `<div class="loading-shimmer"><i class="fas fa-spinner"></i> Загрузка...</div>`;
                 
                 const { data, error } = await supabase
-                    .from('tasks')
+                    .from(tableName)
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Ошибка загрузки:', error);
+                    if (error.code === '42P01') {
+                        showToast('❌ Таблица не найдена! Создайте в Supabase', true);
+                    } else if (error.code === '42501') {
+                        showToast('❌ Нет прав! Создайте политики в Supabase', true);
+                    } else {
+                        showToast('❌ Ошибка загрузки: ' + error.message, true);
+                    }
+                    isConfigured = false;
+                    document.getElementById('statusDot').className = 'status-dot offline';
+                    const stored = localStorage.getItem(STORAGE_KEY);
+                    if (stored) {
+                        try {
+                            tasks = JSON.parse(stored);
+                        } catch (e) {}
+                    }
+                    renderTasks();
+                    return;
+                }
 
                 tasks = data || [];
                 renderTasks();
+                if (tasks.length > 0) {
+                    showToast(`📋 Загружено ${tasks.length} заданий`);
+                }
             } catch (e) {
-                console.error('Ошибка загрузки:', e);
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Ошибка подключения<br>
-                        <span style="font-size:0.8rem; opacity:0.7;">Проверьте интернет</span>
-                    </div>
-                `;
-            } finally {
-                isLoading = false;
+                console.error('Ошибка:', e);
+                isConfigured = false;
+                document.getElementById('statusDot').className = 'status-dot offline';
+                renderTasks();
             }
         }
 
         async function addTaskToCloud(title, description) {
             if (!isConfigured) {
-                // Локальный режим
                 const newTask = {
                     id: Date.now(),
                     title: title,
@@ -528,12 +778,13 @@
                 tasks.unshift(newTask);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
                 renderTasks();
+                showToast('✅ Задание сохранено локально');
                 return true;
             }
 
             try {
                 const { data, error } = await supabase
-                    .from('tasks')
+                    .from(tableName)
                     .insert([{
                         title: title,
                         description: description || 'Без описания',
@@ -542,25 +793,37 @@
                     }])
                     .select();
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Ошибка добавления:', error);
+                    if (error.code === '42501') {
+                        showToast('❌ Нет прав на добавление!', true);
+                    } else {
+                        showToast('❌ Ошибка: ' + error.message, true);
+                    }
+                    isConfigured = false;
+                    document.getElementById('statusDot').className = 'status-dot offline';
+                    return addTaskToCloud(title, description);
+                }
                 
                 if (data && data.length > 0) {
                     tasks.unshift(data[0]);
                     renderTasks();
+                    showToast('✅ Задание добавлено в облако!');
                     return true;
                 }
                 return false;
             } catch (e) {
-                console.error('Ошибка добавления:', e);
-                alert('Ошибка при добавлении задания. Проверьте интернет.');
-                return false;
+                console.error('Ошибка:', e);
+                showToast('⚠️ Ошибка, сохраняем локально', true);
+                isConfigured = false;
+                document.getElementById('statusDot').className = 'status-dot offline';
+                return addTaskToCloud(title, description);
             }
         }
 
         async function updateTaskInCloud(taskId, updates) {
             if (!isConfigured) {
-                // Локальный режим
-                const task = tasks.find(t => t.id === taskId);
+                const task = tasks.find(t => String(t.id) === String(taskId));
                 if (task) {
                     Object.assign(task, updates);
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
@@ -571,50 +834,50 @@
 
             try {
                 const { error } = await supabase
-                    .from('tasks')
+                    .from(tableName)
                     .update(updates)
                     .eq('id', taskId);
 
                 if (error) throw error;
                 
-                // Обновляем локальный кэш
-                const task = tasks.find(t => t.id === taskId);
+                const task = tasks.find(t => String(t.id) === String(taskId));
                 if (task) {
                     Object.assign(task, updates);
                     renderTasks();
+                    showToast('✅ Задание обновлено');
                 }
             } catch (e) {
                 console.error('Ошибка обновления:', e);
-                alert('Ошибка при обновлении задания');
+                showToast('❌ Ошибка обновления', true);
             }
         }
 
         async function deleteTaskFromCloud(taskId) {
             if (!isConfigured) {
-                // Локальный режим
-                tasks = tasks.filter(t => t.id !== taskId);
+                tasks = tasks.filter(t => String(t.id) !== String(taskId));
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
                 renderTasks();
+                showToast('🗑️ Задание удалено');
                 return;
             }
 
             try {
                 const { error } = await supabase
-                    .from('tasks')
+                    .from(tableName)
                     .delete()
                     .eq('id', taskId);
 
                 if (error) throw error;
                 
-                tasks = tasks.filter(t => t.id !== taskId);
+                tasks = tasks.filter(t => String(t.id) !== String(taskId));
                 renderTasks();
+                showToast('🗑️ Задание удалено');
             } catch (e) {
                 console.error('Ошибка удаления:', e);
-                alert('Ошибка при удалении задания');
+                showToast('❌ Ошибка удаления', true);
             }
         }
 
-        // ===== РЕНДЕР =====
         function renderTasks() {
             const container = document.getElementById('tasksContainer');
             if (!container) return;
@@ -656,17 +919,13 @@
                 `;
             }).join('');
 
-            // Обработчики
             document.querySelectorAll('.task-actions .take').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const id = this.getAttribute('data-id');
-                    const task = tasks.find(t => String(t.id) === String(id));
-                    if (task && !task.taken) {
-                        if (confirm(`Взять задание "${task.title}"?`)) {
-                            updateTaskInCloud(id, { taken: true });
-                            if (navigator.vibrate) navigator.vibrate(20);
-                        }
+                    if (confirm('Взять это задание?')) {
+                        updateTaskInCloud(id, { taken: true });
+                        if (navigator.vibrate) navigator.vibrate(20);
                     }
                 });
             });
@@ -675,12 +934,9 @@
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const id = this.getAttribute('data-id');
-                    const task = tasks.find(t => String(t.id) === String(id));
-                    if (task) {
-                        if (confirm(`Отметить "${task.title}" как выполненное?`)) {
-                            deleteTaskFromCloud(id);
-                            if (navigator.vibrate) navigator.vibrate(10);
-                        }
+                    if (confirm('Отметить как выполненное?')) {
+                        deleteTaskFromCloud(id);
+                        if (navigator.vibrate) navigator.vibrate(10);
                     }
                 });
             });
@@ -689,12 +945,9 @@
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const id = this.getAttribute('data-id');
-                    const task = tasks.find(t => String(t.id) === String(id));
-                    if (task) {
-                        if (confirm(`Удалить задание "${task.title}"?`)) {
-                            deleteTaskFromCloud(id);
-                            if (navigator.vibrate) navigator.vibrate(10);
-                        }
+                    if (confirm('Удалить задание?')) {
+                        deleteTaskFromCloud(id);
+                        if (navigator.vibrate) navigator.vibrate(10);
                     }
                 });
             });
@@ -705,7 +958,6 @@
             return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // ===== ДОБАВЛЕНИЕ =====
         async function addTask() {
             const titleInput = document.getElementById('taskTitleInput');
             const descInput = document.getElementById('taskDescInput');
@@ -714,8 +966,7 @@
             const description = descInput.value.trim() || 'Без описания';
 
             if (!title) {
-                if (navigator.vibrate) navigator.vibrate(30);
-                alert('Пожалуйста, напишите название задания');
+                showToast('⚠️ Напишите название задания', true);
                 return;
             }
 
@@ -727,53 +978,16 @@
 
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-plus"></i> Добавить';
-
+            
             if (success) {
                 titleInput.value = '';
                 descInput.value = '';
+                titleInput.blur();
+                descInput.blur();
                 if (navigator.vibrate) navigator.vibrate(15);
                 document.getElementById('tasksContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
-
-        // ===== ИНИЦИАЛИЗАЦИЯ =====
-        async function init() {
-            // Загружаем задания
-            await loadTasks();
-
-            // Обработчики
-            const addBtn = document.getElementById('addTaskBtn');
-            if (addBtn) {
-                addBtn.addEventListener('click', addTask);
-            }
-
-            const titleInput = document.getElementById('taskTitleInput');
-            if (titleInput) {
-                titleInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addTask();
-                    }
-                });
-            }
-
-            // Скрываем клавиатуру при тапе вне полей
-            document.addEventListener('touchstart', function(e) {
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                    document.activeElement?.blur();
-                }
-            }, { passive: true });
-
-            // Статус подключения
-            const dot = document.getElementById('statusDot');
-            if (isConfigured) {
-                dot.className = 'status-dot online';
-            } else {
-                dot.className = 'status-dot offline';
-            }
-        }
-
-        init();
     })();
 </script>
 </body>
